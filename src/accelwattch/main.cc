@@ -50,24 +50,30 @@ int main(int argc, char *argv[]) {
     print_usage(argv[0]);
   }
 
-  for (int32_t i = 0; i < argc; i++) {
-    if (argv[i] == string("-infile")) {
+  for (int32_t i = 0; i < argc; i++) 
+  {
+    if (argv[i] == string("-infile")) 
+    {
       infile_specified = true;
       i++;
       fb = argv[i];
     }
 
-    if (argv[i] == string("-print_level")) {
+    if (argv[i] == string("-print_level")) 
+    {
       i++;
       plevel = atoi(argv[i]);
     }
 
-    if (argv[i] == string("-opt_for_clk")) {
+    if (argv[i] == string("-opt_for_clk")) 
+    {
       i++;
       opt_for_clk = (bool)atoi(argv[i]);
     }
   }
-  if (infile_specified == false) {
+
+  if (infile_specified == false) 
+  {
     print_usage(argv[0]);
   }
 
@@ -77,7 +83,7 @@ int main(int argc, char *argv[]) {
   // parse XML-based interface
   ParseXML *p1 = new ParseXML();
   p1->parse(fb);
-  Processor proc(p1);
+  Processor proc(p1, NULL, NULL);
   proc.displayEnergy(2, plevel);
   delete p1;
   return 0;

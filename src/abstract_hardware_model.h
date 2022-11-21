@@ -1210,6 +1210,8 @@ class warp_inst_t : public inst_t {
   unsigned get_schd_id() const { return m_scheduler_id; }
   active_mask_t get_warp_active_mask() const { return m_warp_active_mask; }
 
+  const core_config * get_core_config() { return m_config; }
+
  protected:
   unsigned m_uid;
   bool m_empty;
@@ -1251,6 +1253,7 @@ class warp_inst_t : public inst_t {
   // Jin: cdp support
  public:
   int m_is_cdp;
+  int m_cta_id;
 };
 
 void move_warp(warp_inst_t *&dst, warp_inst_t *&src);

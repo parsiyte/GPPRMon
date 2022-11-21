@@ -64,7 +64,8 @@ class Processor : public Component {
   vector<SharedCache *> l2dirarray;
   vector<NoC *> nocs;
   MemoryController *mc;
-  NIUController *niu;
+  NIUController *niu;  
+
   PCIeController *pcie;
   FlashController *flashcontroller;
   InputParameter interface_ip;
@@ -77,17 +78,30 @@ class Processor : public Component {
   // clock_network globalClock;
   Component core, l2, l3, l1dir, l2dir, noc, mcs, cc, nius, pcies,
       flashcontrollers;
+
+  FILE *f_l2;
+  FILE *f_noc;
+  FILE *f_noc_router;
+  FILE *f_noc_router_virtual_ch_buff;
+  FILE *f_noc_router_crossbar;
+  FILE *f_noc_router_arbiter;
+
   int numCore, numL2, numL3, numNOC, numL1Dir, numL2Dir;
-  Processor(ParseXML *XML_interface);
+  Processor(ParseXML *XML_interface, unsigned long long *cycle, unsigned long long *tot_cycle);
   void compute();
   void set_proc_param();
   void visualizer_print(gzFile visualizer_file);
+
   void displayEnergy(uint32_t indent = 0, int plevel = 100,
                      bool is_tdp_parm = true);
+
   void displayDeviceType(int device_type_, uint32_t indent = 0);
   void displayInterconnectType(int interconnect_type_, uint32_t indent = 0);
   double l2_power;
   double idle_core_power;
+
+  unsigned long long *proc_cycle;
+  unsigned long long *proc_tot_cycle;
 
   double get_const_dynamic_power() {
     double constpart = 0;
@@ -318,7 +332,47 @@ class Processor : public Component {
   void coefficient_scale();
   void iterative_lse(double *, double *);
 
+  void open_folders();
+  void reopen_folders(unsigned long long cycle);
+  bool power_prof_en;
+  FILE *f_processor;
+  FILE *f_p_total_cores;
+  FILE *f_p_total_l2;
+  FILE *f_p_total_nocs;
+  FILE *f_p_total_mcs;  
   ~Processor();
 };
 
 #endif /* PROCESSOR_H_ */
+
+//  fprintf(tot_cores, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(tot_l2, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(tot_nocs, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(tot_mcs, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(ifetch_unit, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(in_cache, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(in_buffer, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(in_decoder, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(load_store_u, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(shmem, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(data_cache, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(constant_cache, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm,RunTimeDynmEn,ExTime\n");
+//  fprintf(tex_cache, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(load_store_queue, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(processor, "Cycle,Area,PeakDynm,PeakDynmEn,clockRate,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(reg_files, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(reg_files_banks, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(crossbar, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(crossbar, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(arbiter, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(in_scheduler, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(in_window, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(in_alu, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(fp_units, "Cycle,Area,PeakDynm,PeakDynmEn,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(complex_alus, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(result_broadc_bus, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
+//  fprintf(idle_core, "Cycle,PeakDynm\n");
+//
+
+
+

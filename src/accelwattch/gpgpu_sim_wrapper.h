@@ -82,7 +82,9 @@ struct PowerscalingCoefficients{
 
 class gpgpu_sim_wrapper {
  public:
-  gpgpu_sim_wrapper(bool power_simulation_enabled, char* xmlfile, int power_simulation_mode, bool dvfs_enabled);
+  gpgpu_sim_wrapper(bool power_simulation_enabled, char* xmlfile, 
+                    int power_simulation_mode, bool dvfs_enabled,
+                    unsigned long long *cycle, unsigned long long *tot_cycle);
   ~gpgpu_sim_wrapper();
 
   void init_mcpat(char* xmlfile, char* powerfile, char* power_trace_file,
@@ -146,6 +148,9 @@ class gpgpu_sim_wrapper {
   bool sanity_check(double a, double b);
 
   PowerscalingCoefficients * get_scaling_coeffs();
+
+  unsigned long long *m_cycle;
+  unsigned long long *m_tot_cycle;
 
  private:
   void print_steady_state(int position, double init_val);

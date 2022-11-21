@@ -62,11 +62,13 @@ void mcpat_cycle(const gpgpu_sim_config &config,
     return;
   }
 
-  if ((tot_cycle + cycle) % stat_sample_freq == 0) {
-    if(dvfs_enabled){
+  if ((tot_cycle + cycle) % stat_sample_freq == 0) 
+  {
+    if(dvfs_enabled)
+    {
       wrapper->set_model_voltage(1); //performance model needs to support this.
     }
-
+//    printf("Current cycle : %u and sampling frequency = %u\n", tot_cycle + cycle, stat_sample_freq);
     wrapper->set_inst_power(
         shdr_config->gpgpu_clock_gated_lanes, stat_sample_freq,
         stat_sample_freq, power_stats->get_total_inst(0),
@@ -195,11 +197,12 @@ bool parse_hw_file(char* hwpowerfile, bool find_target_kernel, vector<string> &h
   fstream hw_file;
   hw_file.open(hwpowerfile, ios::in);
   string line, word, temp;
-  while(!hw_file.eof()){
+  while(!hw_file.eof())
+  {
     hw_data.clear();
     getline(hw_file, line);
     stringstream s(line);
-    while (getline(s,word,',')){
+    while (getline(s,word,',')) {
       hw_data.push_back(word);
     }
     if(hw_data[HW_BENCH_NAME] == std::string(benchname)){

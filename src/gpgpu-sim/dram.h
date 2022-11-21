@@ -108,6 +108,7 @@ enum bank_grp_bits_position { HIGHER_BITS = 0, LOWER_BITS };
 class mem_fetch;
 class memory_config;
 
+//0000000000000000
 class dram_t {
  public:
   dram_t(unsigned int parition_id, const memory_config *config,

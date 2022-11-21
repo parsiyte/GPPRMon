@@ -97,6 +97,7 @@ tr1_hash_map<new_addr_type, unsigned> address_random_interleaving;
 
 #include "mem_latency_stat.h"
 
+unsigned gpu_sim_kernel_id = 0;
 
 void power_config::reg_options(class OptionParser *opp) {
   option_parser_register(opp, "-accelwattch_xml_file", OPT_CSTR,
@@ -111,16 +112,13 @@ void power_config::reg_options(class OptionParser *opp) {
                          &g_power_per_cycle_dump,
                          "Dump detailed power output each cycle", "0");
 
-
-
-
   option_parser_register(opp, "-hw_perf_file_name", OPT_CSTR,
                          &g_hw_perf_file_name, "Hardware Performance Statistics file",
                          "hw_perf.csv");
 
   option_parser_register(opp, "-hw_perf_bench_name", OPT_CSTR,
                          &g_hw_perf_bench_name, "Kernel Name in Hardware Performance Statistics file",
-                         "");
+                         "hw_perf_bench_name");
 
   option_parser_register(opp, "-power_simulation_mode", OPT_INT32,
                          &g_power_simulation_mode,
@@ -304,6 +302,13 @@ void memory_config::reg_options(class OptionParser *opp) {
       "elimnate_rw_turnaround i.e set tWTR and tRTW = 0", "0");
   option_parser_register(opp, "-icnt_flit_size", OPT_UINT32, &icnt_flit_size,
                          "icnt_flit_size", "32");
+
+  option_parser_register(opp, "-icnt_flit_size", OPT_UINT32, &icnt_flit_size,
+                         "icnt_flit_size", "32");
+
+  option_parser_register(opp, "-mem_profiler", OPT_BOOL, &mem_metric_collection,
+                         "memory access runtime profiling (0 = not enabled)", "0");
+
   m_address_mapping.addrdec_setoption(opp);
 }
 
@@ -651,6 +656,7 @@ void gpgpu_sim_config::reg_options(option_parser_t opp) {
   m_shader_config.reg_options(opp);
   m_memory_config.reg_options(opp);
   power_config::reg_options(opp);
+
   option_parser_register(opp, "-gpgpu_max_cycle", OPT_INT64, &gpu_max_cycle_opt,
                          "terminates gpu simulation early (0 = no limit)", "0");
   option_parser_register(opp, "-gpgpu_max_insn", OPT_INT64, &gpu_max_insn_opt,
@@ -708,7 +714,7 @@ void gpgpu_sim_config::reg_options(option_parser_t opp) {
       "Interval between each snapshot in control flow logger", "0");
   option_parser_register(opp, "-visualizer_enabled", OPT_BOOL,
                          &g_visualizer_enabled,
-                         "Turn on visualizer output (1=On, 0=Off)", "1");
+                         "Turn on visualizer output (1=On, 0=Off)", "0");
   option_parser_register(opp, "-visualizer_outputfile", OPT_CSTR,
                          &g_visualizer_filename,
                          "Specifies the output log file for visualizer", NULL);
@@ -755,6 +761,30 @@ void gpgpu_sim_config::reg_options(option_parser_t opp) {
                          &(gpgpu_ctx->device_runtime->g_TB_launch_latency),
                          "thread block launch latency in cycles. Default: 0",
                          "0");
+
+  option_parser_register(opp, "-mem_runtime_stat", OPT_INT64, &(this->m_mem_profiler_config.sampling_cycle),
+                         "memory access runtime profiling sampling freq", "100");
+
+  option_parser_register(opp, "-L1D_metrics", OPT_BOOL, &(this->m_mem_profiler_config.m_l1d),
+                         "memory access runtime profiling for L1 data cache", "0");
+
+  option_parser_register(opp, "-noncoal_metrics", OPT_BOOL, &(this->m_mem_profiler_config.m_shmem),
+                         "memory access runtime profiling for shared memory", "0");
+
+  option_parser_register(opp, "-L2_metrics", OPT_BOOL, &(this->m_mem_profiler_config.m_l2),
+                         "memory access runtime profiling for L2 cache", "0");
+
+  option_parser_register(opp, "-DRAM_metrics", OPT_BOOL, &(this->m_mem_profiler_config.m_dram),
+                         "memory access runtime profiling for DRAM", "0");
+
+  option_parser_register(opp, "-Shmem_metrics", OPT_BOOL, &(this->m_mem_profiler_config.m_noncoal),
+                         "memory access runtime profiling for noncoalesced accesses", "0");
+
+  option_parser_register(opp, "-store_enable", OPT_BOOL, &(this->m_mem_profiler_config.store_en),
+                         "Enable stores for memory profiling", "0");
+
+  option_parser_register(opp, "-accumulate_stats", OPT_BOOL, &(this->m_mem_profiler_config.accumulate_stats),
+                         "Accumulate stats for the memory profiling", "0");
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -773,6 +803,32 @@ void increment_x_then_y_then_z(dim3 &i, const dim3 &bound) {
 
 void gpgpu_sim::launch(kernel_info_t *kinfo) {
   unsigned cta_size = kinfo->threads_per_cta();
+
+  // remove older access_metrics if exists
+  if (gpu_sim_kernel_id == 0) {
+    if (getMemoryConfig()->mem_metric_collection || m_config.g_power_simulation_enabled) 
+    {
+      system("rm -rf runtime_profiling_metrics");
+
+    // Create a directory to hold metrics
+      system("mkdir runtime_profiling_metrics");
+      if (getMemoryConfig()->mem_metric_collection )
+        system("mkdir runtime_profiling_metrics/memory_accesses");
+      if (m_config.g_power_simulation_enabled)
+        system("mkdir runtime_profiling_metrics/energy_consumption");
+    }
+  }
+
+  if (getMemoryConfig()->mem_metric_collection ) {
+    char com[200];
+    sprintf(com, "mkdir runtime_profiling_metrics/memory_accesses/kernel_%d",
+            gpu_sim_kernel_id);
+    system(com);
+    if (gpu_sim_kernel_id != 0)
+      delete m_mem_profiler;
+    this->m_mem_profiler = new mem_access_profiler(this);
+  }
+
   if (cta_size > m_shader_config->n_thread_per_shader) {
     printf(
         "Execution error: Shader kernel CTA (block) size is too large for "
@@ -788,13 +844,16 @@ void gpgpu_sim::launch(kernel_info_t *kinfo) {
     abort();
   }
   unsigned n = 0;
-  for (n = 0; n < m_running_kernels.size(); n++) {
-    if ((NULL == m_running_kernels[n]) || m_running_kernels[n]->done()) {
+  for (n = 0; n < m_running_kernels.size(); n++) 
+  {
+    if ((NULL == m_running_kernels[n]) || m_running_kernels[n]->done()) 
+    {
       m_running_kernels[n] = kinfo;
       break;
     }
   }
   assert(n < m_running_kernels.size());
+//  this->m_mem_profiler->determine_kernel_details(this, kinfo);
 }
 
 bool gpgpu_sim::can_start_kernel() {
@@ -916,7 +975,8 @@ void exec_gpgpu_sim::createSIMTCluster() {
 }
 
 gpgpu_sim::gpgpu_sim(const gpgpu_sim_config &config, gpgpu_context *ctx)
-    : gpgpu_t(config, ctx), m_config(config) {
+    : gpgpu_t(config, ctx), m_config(config) 
+{
   gpgpu_ctx = ctx;
   m_shader_config = &m_config.m_shader_config;
   m_memory_config = &m_config.m_memory_config;
@@ -925,7 +985,11 @@ gpgpu_sim::gpgpu_sim(const gpgpu_sim_config &config, gpgpu_context *ctx)
 
 #ifdef GPGPUSIM_POWER_MODEL
   m_gpgpusim_wrapper = new gpgpu_sim_wrapper(config.g_power_simulation_enabled,
-                                             config.g_power_config_name, config.g_power_simulation_mode, config.g_dvfs_enabled);
+                                             config.g_power_config_name, 
+                                             config.g_power_simulation_mode, 
+                                             config.g_dvfs_enabled,
+                                             &gpu_sim_cycle,
+                                             &gpu_tot_sim_cycle);
 #endif
 
   m_shader_stats = new shader_core_stats(m_shader_config);
@@ -1088,7 +1152,8 @@ bool gpgpu_sim::active() {
   return false;
 }
 
-void gpgpu_sim::init() {
+void gpgpu_sim::init() 
+{
   // run a CUDA grid on the GPU microarchitecture simulator
   gpu_sim_cycle = 0;
   gpu_sim_insn = 0;
@@ -1132,7 +1197,8 @@ void gpgpu_sim::init() {
     set_spill_interval(m_config.gpgpu_cflog_interval * 40);
   }
 
-  if (g_network_mode) icnt_init();
+  if (g_network_mode) 
+    icnt_init();
 }
 
 void gpgpu_sim::update_stats() {
@@ -1348,8 +1414,8 @@ void gpgpu_sim::clear_executed_kernel_info() {
   m_executed_kernel_uids.clear();
 }
 void gpgpu_sim::gpu_print_stat() {
+  gpu_sim_kernel_id++;
   FILE *statfout = stdout;
-
   std::string kernel_info_str = executed_kernel_info_string();
   fprintf(statfout, "%s", kernel_info_str.c_str());
 
@@ -1433,14 +1499,16 @@ void gpgpu_sim::gpu_print_stat() {
   m_shader_stats->print(stdout);
 #ifdef GPGPUSIM_POWER_MODEL
   if (m_config.g_power_simulation_enabled) {
-    if(m_config.g_power_simulation_mode > 0){
+    if(m_config.g_power_simulation_mode > 0)
+    {
         //if(!m_config.g_aggregate_power_stats)
-          mcpat_reset_perf_count(m_gpgpusim_wrapper);
+        mcpat_reset_perf_count(m_gpgpusim_wrapper);
         calculate_hw_mcpat(m_config, getShaderCoreConfig(), m_gpgpusim_wrapper,
                   m_power_stats, m_config.gpu_stat_sample_freq,
                   gpu_tot_sim_cycle, gpu_sim_cycle, gpu_tot_sim_insn,
                   gpu_sim_insn, m_config.g_power_simulation_mode, m_config.g_dvfs_enabled, 
-                  m_config.g_hw_perf_file_name, m_config.g_hw_perf_bench_name, executed_kernel_name(), m_config.accelwattch_hybrid_configuration, m_config.g_aggregate_power_stats);
+                  m_config.g_hw_perf_file_name, m_config.g_hw_perf_bench_name, 
+                  executed_kernel_name(), m_config.accelwattch_hybrid_configuration, m_config.g_aggregate_power_stats);
     }
     m_gpgpusim_wrapper->print_power_kernel_stats(
         gpu_sim_cycle, gpu_tot_sim_cycle, gpu_tot_sim_insn + gpu_sim_insn,
@@ -1982,16 +2050,55 @@ void gpgpu_sim::cycle() {
     }
     gpu_sim_cycle++;
 
+    if (this->getMemoryConfig()->mem_metric_collection)
+    {
+      if ((gpu_sim_cycle > 5000) && 
+          ((gpu_sim_cycle + gpu_tot_sim_cycle) % get_config().m_mem_profiler_config.sampling_cycle == 0))
+      {
+        if (this->get_config().m_mem_profiler_config.m_l1d){
+          this->m_mem_profiler->print_l1d(gpu_sim_cycle + gpu_tot_sim_cycle);
+        }
+        if (this->get_config().m_mem_profiler_config.m_l2){
+          this->m_mem_profiler->print_l2(gpu_sim_cycle + gpu_tot_sim_cycle);
+        }
+        if (this->get_config().m_mem_profiler_config.m_dram){
+          this->m_mem_profiler->print_dram(gpu_sim_cycle + gpu_tot_sim_cycle);
+        }
+      }
+    }
+
+//    if (gpu_sim_cycle > 3500 && get_config().m_mem_profiler_config.enabled() &&
+//        ((gpu_sim_cycle + gpu_tot_sim_cycle) % get_config().m_mem_profiler_config.sampling_cycle == 0))
+//    {
+//      if (get_config().m_mem_profiler_config.m_l1d)
+//      {
+//      }
+//
+//      if (get_config().m_mem_profiler_config.m_l2)
+//      {
+//        this->m_mem_profiler->print_l2(gpu_sim_cycle + gpu_tot_sim_cycle);
+//      }
+//
+//      if (get_config().m_mem_profiler_config.m_dram)
+//      {
+//        this->m_mem_profiler->print_dram(gpu_sim_cycle + gpu_tot_sim_cycle);
+//      }
+//      if (get_config().m_mem_profiler_config.m_l1d)
+//
+//      if (get_config().m_mem_profiler_config.m_l1d)
+//    }
+
     if (g_interactive_debugger_enabled) gpgpu_debug();
 
       // McPAT main cycle (interface with McPAT)
 #ifdef GPGPUSIM_POWER_MODEL
     if (m_config.g_power_simulation_enabled) {
-      if(m_config.g_power_simulation_mode == 0){
-      mcpat_cycle(m_config, getShaderCoreConfig(), m_gpgpusim_wrapper,
-                  m_power_stats, m_config.gpu_stat_sample_freq,
-                  gpu_tot_sim_cycle, gpu_sim_cycle, gpu_tot_sim_insn,
-                  gpu_sim_insn, m_config.g_dvfs_enabled);
+      if(m_config.g_power_simulation_mode == 0)
+      {
+        mcpat_cycle(m_config, getShaderCoreConfig(), m_gpgpusim_wrapper,
+                    m_power_stats, m_config.gpu_stat_sample_freq,
+                    gpu_tot_sim_cycle, gpu_sim_cycle, gpu_tot_sim_insn,
+                    gpu_sim_insn, m_config.g_dvfs_enabled);
       }
     }
 #endif
@@ -2180,3 +2287,467 @@ const shader_core_config *gpgpu_sim::getShaderCoreConfig() {
 const memory_config *gpgpu_sim::getMemoryConfig() { return m_memory_config; }
 
 simt_core_cluster *gpgpu_sim::getSIMTCluster() { return *m_cluster; }
+
+mem_access_profiler::mem_access_profiler(gpgpu_sim *simulator)
+{
+  accumulate_results = simulator->get_config().m_mem_profiler_config.accumulate_stats;
+  if (simulator->get_config().m_mem_profiler_config.m_l1d)
+  {
+    // l1d folder is created.
+    char command[200];
+    sprintf(command, "mkdir runtime_profiling_metrics/memory_accesses/kernel_%d/l1d",
+            gpu_sim_kernel_id);
+    system(command);
+
+    nof_cluster = simulator->get_config().num_cluster();
+    l1d_accesses = (unsigned **) malloc(sizeof(unsigned *) * nof_cluster);
+    l1d_cache = (FILE **) malloc(sizeof(FILE *) * nof_cluster);
+ 
+    if (!(l1d_accesses && l1d_cache)) {
+      printf("File l1d pointer or l1d_cache buffer pointer cannot be opened\n");
+      exit(1);
+    }
+
+    //l1d csv files are created.
+    for (unsigned i = 0; i < nof_cluster ; i++)
+    {
+      char f_name[200];
+      sprintf(f_name, "runtime_profiling_metrics/memory_accesses/kernel_%d/l1d/l1d_%d.csv",
+              gpu_sim_kernel_id, i);
+      l1d_cache[i] = fopen(f_name, "w+");
+      if (!l1d_cache[i]) {
+        printf("File %d for L1 data cache cannot be opened\n", i);
+        exit(1);
+      }
+      fprintf(l1d_cache[i], "cycle,hit,hit_res,miss,res_fail,sec_miss,mshr_hit\n");
+      fflush(l1d_cache[i]);
+
+      //l1d_buffers_are_initialized.
+      l1d_accesses[i] = (unsigned *) malloc(sizeof(unsigned) * NUM_CACHE_REQUEST_STATUS);
+      if (!l1d_accesses[i]) {
+        printf("L1D cache for %d'th id cannot be allocated dynamically\n", i);
+        exit(1);
+      }
+
+      for (unsigned j = 0; j < NUM_CACHE_REQUEST_STATUS; j++)
+        l1d_accesses[i][j] = 0;
+    }
+  }
+
+  if (simulator->get_config().m_mem_profiler_config.m_l2)
+  {
+    // l2 folder is created.
+    char command[200];
+    sprintf(command, "mkdir runtime_profiling_metrics/memory_accesses/kernel_%d/l2",
+            gpu_sim_kernel_id);
+    system(command);
+
+    nof_subp = simulator->getMemoryConfig()->m_n_mem_sub_partition;
+    l2_accesses = (unsigned **) malloc(sizeof(unsigned *) * nof_subp);
+    this->l2_cache = (FILE **) malloc(sizeof(FILE *) * nof_subp);
+ 
+    if (!(l2_accesses && l2_cache)) {
+      printf("File L2 pointer or L2 cache buffer pointer cannot be opened\n");
+      exit(1);
+    }
+
+    //l2 csv files are created.
+    for (unsigned i = 0; i < nof_subp ; i++)
+    {
+      char f_name[200];
+      sprintf(f_name, "runtime_profiling_metrics/memory_accesses/kernel_%d/l2/l2_%d.csv",
+              gpu_sim_kernel_id, i);
+      l2_cache[i] = fopen(f_name, "w+");
+      if (!l2_cache[i]) {
+        printf("File %d for L2 cache cannot be opened\n", i);
+        exit(1);
+      }
+      fprintf(l2_cache[i], "cycle,hit,hit_res,miss,res_fail,sec_miss,mshr_hit\n");
+      fflush(l2_cache[i]);
+
+      //l2_buffers_are_initialized.
+      l2_accesses[i] = (unsigned *) malloc(sizeof(unsigned) * NUM_CACHE_REQUEST_STATUS);
+      if (!l2_accesses[i]) {
+        printf("L2 cache for %d'th id cannot be allocated dynamically\n", i);
+        exit(1);
+      }
+
+      for (unsigned j = 0; j < NUM_CACHE_REQUEST_STATUS; j++)
+        l2_accesses[i][j] = 0;
+    }
+  }
+  
+  if (simulator->get_config().m_mem_profiler_config.m_dram)
+  {
+    // DRAM folder is created.
+    char command[200];
+    sprintf(command, "mkdir runtime_profiling_metrics/memory_accesses/kernel_%d/dram",
+            gpu_sim_kernel_id);
+    system(command);
+
+    nof_part = simulator->getMemoryConfig()->m_n_mem;
+    dram_accesses = (unsigned **) malloc(sizeof(unsigned *) * nof_part);
+    this->dram = (FILE **) malloc(sizeof(FILE *) * nof_part);
+ 
+    if (!(dram_accesses && dram)) {
+      printf("File DRAM pointer or DRAM cache buffer pointer cannot be opened\n");
+      exit(1);
+    }
+
+    //DRAM csv files are created.
+    for (unsigned i = 0; i < nof_part ; i++)
+    {
+      char f_name[200];
+      sprintf(f_name, "runtime_profiling_metrics/memory_accesses/kernel_%d/dram/dram_%d.csv",
+              gpu_sim_kernel_id, i);
+      dram[i] = fopen(f_name, "w+");
+      if (!dram[i]) {
+        printf("File %d for DRAM cache cannot be opened\n", i);
+        exit(1);
+      }
+      fprintf(dram[i], "cycle,row_hit,row_miss\n");
+      fflush(dram[i]);
+
+      //dram buffers_are_initialized.
+      dram_accesses[i] = (unsigned *) malloc(sizeof(unsigned) * 2);
+      if (!dram_accesses[i]) {
+        printf("DRAM for %d'th id cannot be allocated dynamically\n", i);
+        exit(1);
+      }
+
+      for (unsigned j = 0; j < 2; j++)
+        dram_accesses[i][j] = 0;
+    }
+  }
+}
+
+void mem_access_profiler::update_l1d(const char *cache_name, cache_request_status stat) {
+  char l1d_cache_id[5];
+  strncpy(l1d_cache_id, cache_name + 4, 3);
+  unsigned cache_id = atoi(l1d_cache_id);
+  //printf("cache name : %s, cache_id = %d\n", l1d_cache_id, cache_id);
+  l1d_accesses[cache_id][stat]++;
+}
+
+void mem_access_profiler::print_l1d(unsigned long long cycle) {
+
+  if (cycle % 1000000 == 0)
+  {
+    for (unsigned i = 0; i < nof_cluster ; i++) {
+      fclose(l1d_cache[i]);
+      l1d_cache[i] = NULL;
+    }
+
+    unsigned seq = cycle / 1000000;
+    for (unsigned i = 0; i < nof_cluster ; i++)
+    {
+      char f_name[200];
+      sprintf(f_name, "runtime_profiling_metrics/memory_accesses/kernel_%d/l1d/l1d_%d_%d.csv",
+              gpu_sim_kernel_id, i, (seq + 1));
+      l1d_cache[i] = fopen(f_name, "w+");
+      if (!l1d_cache[i]) {
+        printf("File %d for L1 data cache cannot be opened for %d'th sequence\n", i, (seq + 1));
+        exit(1);
+      }
+    }
+  }
+  
+  for (unsigned i = 0; i < nof_cluster ; i++) {
+    fprintf(l1d_cache[i], "%llu,%d,%d,%d,%d,%d,%d\n", cycle, 
+            l1d_accesses[i][0],
+            l1d_accesses[i][1],
+            l1d_accesses[i][2],
+            l1d_accesses[i][3],
+            l1d_accesses[i][4],
+            l1d_accesses[i][5]);
+    fflush(l1d_cache[i]);
+
+    if (!accumulate_results)
+    {
+      for (unsigned k = 0; k < 6; k++)
+        l1d_accesses[i][k] = 0;
+    }
+  }
+}
+
+void mem_access_profiler::update_l2(const char *cache_name, cache_request_status stat) {
+  char l2_cache_id[5];  
+  strncpy(l2_cache_id, cache_name + 8, 3);
+  unsigned cache_id = atoi(l2_cache_id);
+//  printf("cache name : %s, cache_id = %d\n", l2_cache_id, cache_id);
+  l2_accesses[cache_id][stat]++;
+}
+
+void mem_access_profiler::print_l2(unsigned long long cycle) {
+
+  if (cycle % 1000000 == 0)
+  {
+    for (unsigned i = 0; i < nof_subp ; i++) {
+      fclose(this->l2_cache[i]);
+      this->l2_cache[i] = NULL;
+    }
+
+    unsigned seq = cycle / 1000000;
+    for (unsigned i = 0; i < nof_subp ; i++)
+    {
+      char f_name[200];
+      sprintf(f_name, "runtime_profiling_metrics/memory_accesses/kernel_%d/l2/l2_%d_%d.csv",
+              gpu_sim_kernel_id, i, (seq + 1));
+      this->l2_cache[i] = fopen(f_name, "w+");
+      if (!this->l2_cache[i]) {
+        printf("File %d for L2 data cache cannot be opened for %d'th sequence\n", i, (seq + 1));
+        exit(1);
+      }
+    }
+  }
+  
+  for (unsigned i = 0; i < nof_subp ; i++) {
+    fprintf(this->l2_cache[i], "%llu,%d,%d,%d,%d,%d,%d\n", cycle, 
+            l2_accesses[i][0],
+            l2_accesses[i][1],
+            l2_accesses[i][2],
+            l2_accesses[i][3],
+            l2_accesses[i][4],
+            l2_accesses[i][5]);
+    fflush(l2_cache[i]);
+    if (!accumulate_results)
+    {
+      for (unsigned k = 0; k < 6; k++)
+        l2_accesses[i][k] = 0;
+    }
+  }
+}
+
+void mem_access_profiler::update_dram(unsigned part_id, bool hit) {
+  dram_accesses[part_id][!hit]++;
+}
+
+void mem_access_profiler::print_dram(unsigned long long cycle) {
+
+  if (cycle % 1000000 == 0)
+  {
+    for (unsigned i = 0; i < nof_part ; i++) {
+      fclose(dram[i]);
+      dram[i] = NULL;
+    }
+
+    unsigned seq = cycle / 1000000;
+    for (unsigned i = 0; i < nof_part ; i++)
+    {
+      char f_name[200];
+      sprintf(f_name, "runtime_profiling_metrics/memory_accesses/kernel_%d/dram/dram_%d_%d.csv",
+              gpu_sim_kernel_id, i, (seq + 1));
+      dram[i] = fopen(f_name, "w+");
+      if (!dram[i]) {
+        printf("File %d for DRAM cannot be opened for %d'th sequence\n", i, (seq + 1));
+        exit(1);
+      }
+    }
+  }
+  
+  for (unsigned i = 0; i < nof_part ; i++) 
+  {
+    fprintf(dram[i], "%llu,%d,%d\n", cycle, dram_accesses[i][0], dram_accesses[i][1]);
+    fflush(dram[i]);
+    if (!accumulate_results) {
+      for (unsigned k = 0; k < 2; k++)
+        dram_accesses[i][k] = 0;
+    }
+  }
+}
+
+mem_access_profiler::~mem_access_profiler(){
+  if (l1d_cache)
+  {
+    for (unsigned i = 0; i < nof_cluster; i++){
+      fclose(l1d_cache[i]);
+      free(l1d_accesses[i]);
+    }
+    free(l1d_accesses);
+    free(l1d_cache);
+  }
+  if (l2_cache)
+  {
+    for (unsigned i = 0; i < nof_subp; i++){
+      fclose(l2_cache[i]);
+      free(l2_accesses[i]);
+    }
+    free(l2_accesses);
+    free(l2_cache);
+  }
+  if (dram)
+  {
+    for (unsigned i = 0; i < nof_part; i++){
+      fclose(dram[i]);
+      free(dram_accesses[i]);
+    }
+    free(dram_accesses);
+    free(dram);
+  }
+}
+
+
+//void mem_access_profiler::determine_kernel_details(gpgpu_sim *simulator, kernel_info_t *kinfo)
+//{
+//  if (simulator->get_config().m_mem_profiler_config.m_l1d) {
+//    l1d = (unsigned **) malloc(NUM_CACHE_REQUEST_STATUS * sizeof(unsigned *));
+//    if (!l1d)
+//    {
+//      printf("Heap cannot be allocated for l1d\n");
+//      exit(1);
+//    }
+//    for (unsigned i = 0; i < 6; i++)
+//    {
+//      l1d[i] = (unsigned *)malloc(sizeof(unsigned) * nof_warps);
+//      if (l1d[i]) {
+//        printf("Heap cannot be allocated for l1d\n");
+//        exit(1);
+//      }
+//      for (unsigned j = 0; j < nof_warps ; j++)
+//      {
+//        l1d[i][j] = 0;
+//      }
+//    }
+//  }  
+//}
+
+//  unsigned nof_tb = kinfo->num_blocks();
+//  unsigned nof_t_per_tb = kinfo->threads_per_cta();
+//  unsigned nof_warps = nof_tb * ceil((float)nof_t_per_tb / 32);
+//  warp_per_tb = ceil((float)nof_t_per_tb / 32);
+//
+//  if (simulator->get_config().m_mem_profiler_config.m_l1d) {
+//    l1d = (unsigned **) malloc(NUM_CACHE_REQUEST_STATUS * sizeof(unsigned *));
+//    if (!l1d)
+//    {
+//      printf("Heap cannot be allocated for l1d\n");
+//      exit(1);
+//    }
+//    for (unsigned i = 0; i < 6; i++)
+//    {
+//      l1d[i] = (unsigned *)malloc(sizeof(unsigned) * nof_warps);
+//      if (l1d[i]) {
+//        printf("Heap cannot be allocated for l1d\n");
+//        exit(1);
+//      }
+//      for (unsigned j = 0; j < nof_warps ; j++)
+//      {
+//        l1d[i][j] = 0;
+//      }
+//    }
+//  }
+//
+//  if (simulator->get_config().m_mem_profiler_config.m_l2) {
+//    l2 = (unsigned **) malloc(NUM_CACHE_REQUEST_STATUS * sizeof(unsigned *));
+//    if (!l2)
+//    {
+//      printf("Heap cannot be allocated for l2\n");
+//      exit(1);
+//    }
+//    for (unsigned i = 0; i < 6; i++)
+//    {
+//      l2[i] = (unsigned *)malloc(sizeof(unsigned) * nof_warps);
+//      if (l2[i]) {
+//        printf("Heap cannot be allocated for l2\n");
+//        exit(1);
+//      }
+//      for (unsigned j = 0; j < nof_warps ; j++)
+//      {
+//        l2[i][j] = 0;
+//      }
+//    }
+//  }
+//
+//  if (simulator->get_config().m_mem_profiler_config.m_l1d) {
+//    dram = (unsigned *)malloc(sizeof(unsigned) * nof_warps);
+//    if (!dram) {
+//      printf("Heap cannot be allocated for dram\n");
+//      exit(1);
+//    }
+//    for (unsigned i = 0; i < nof_warps ; i++)
+//      dram[i] = 0;
+//  }
+//}
+
+
+//void mem_access_profiler::update_dram(unsigned tbid, unsigned wid){
+//  dram[warp_per_tb * tbid + wid]++;
+//}
+
+//void mem_access_profiler::print_l1d(unsigned long long cycle){
+//  fprintf()
+//}
+
+
+//  if (simulator->get_config().m_mem_profiler_config.m_l1d)
+//  if (simulator->get_config().m_mem_profiler_config.m_l1d)
+//  if (simulator->get_config().m_mem_profiler_config.m_l1d)
+
+//    printf("Number of cluster = %d\n", nof_cluster);
+//    file_l1d = (FILE **)malloc(sizeof(FILE *) * nof_cluster);
+//    for (unsigned i = 0; i < nof_cluster ; i++)
+//    {
+//      char f_name[200];
+//      sprintf(f_name, "runtime_profiling_metrics/memory_accesses/kernel_%d/l1d/l1d_%d.csv",
+//              gpu_sim_kernel_id, i);
+//      file_l1d[i] = fopen(f_name, "w+");
+//      if (!file_l1d[i])
+//      {
+//        printf("File %d for L1 data cache cannot be opened\n", i);
+//        exit(1);
+//      }
+//      fprintf(file_l1d[i], "cycle,tb_id,wid");
+//      fflush(file_l1d[i]);
+//    }
+//  }
+
+//  if (simulator->get_config().m_mem_profiler_config.m_l2)
+//  {
+//    char command[200];
+//    sprintf(command, "mkdir runtime_profiling_metrics/memory_accesses/kernel_%d/l2",
+//            gpu_sim_kernel_id);
+//    system(command);
+//
+//    unsigned nof_subpartition = simulator->getMemoryConfig()->m_n_mem_sub_partition;
+//    file_l2 = (FILE **)malloc(sizeof(FILE *) * nof_subpartition);
+//    for (unsigned i = 0; i < nof_subpartition ; i++)
+//    { 
+//      char f_name[200];
+//      sprintf(f_name, "runtime_profiling_metrics/memory_accesses/kernel_%d/l2/l2_%d.csv",
+//              gpu_sim_kernel_id, i);
+//      file_l2[i] = fopen(f_name, "w+");
+//      if (!file_l2[i])
+//      {
+//        printf("File %d for L2 cache cannot be opened\n", i);
+//        exit(1);
+//      }
+//      fprintf(file_l2[i], "cycle,tb_id,wid");
+//    }
+//  }
+//
+//  if (simulator->get_config().m_mem_profiler_config.m_dram)
+//  {
+//    char command[200];
+//    sprintf(command, "mkdir runtime_profiling_metrics/memory_accesses/kernel_%d/dram",
+//            gpu_sim_kernel_id);
+//    system(command);
+//
+//    unsigned nof_subpartition = simulator->getMemoryConfig()->m_n_mem;     
+//    file_dram = (FILE **)malloc(sizeof(FILE *) * nof_subpartition);
+//    for (unsigned i = 0; i < nof_subpartition ; i++)
+//    {
+//      char f_name[200];
+//      sprintf(f_name, "runtime_profiling_metrics/memory_accesses/kernel_%d/dram/dram_%d.csv",
+//              gpu_sim_kernel_id, i);
+//      file_dram[i] = fopen(f_name, "w+");
+//      if (!file_dram[i])
+//      {
+//        printf("File %d for dram cannot be opened\n", i);
+//        exit(1);
+//      }
+//      fprintf(file_dram[i], "cycle,tb_id,wid");
+//    }
+//  }
+//// if (simulator->m_config.m_mem_profiler_config.m_shm)
+// if (simulator->m_config.m_mem_profiler_config.m_noncoal)
+//  printf("Merhaba\n");

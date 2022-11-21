@@ -1662,7 +1662,8 @@ enum cache_request_status data_cache::rd_miss_base(
 // request could not be accepted (for any reason)
 enum cache_request_status read_only_cache::access(
     new_addr_type addr, mem_fetch *mf, unsigned time,
-    std::list<cache_event> &events) {
+    std::list<cache_event> &events,
+    bool l1d, bool l2) {
   assert(mf->get_data_size() <= m_config.get_atom_sz());
   assert(m_config.m_write_policy == READ_ONLY);
   assert(!mf->get_is_write());
@@ -1750,15 +1751,42 @@ enum cache_request_status data_cache::process_tag_probe(
 // performing actions specific to each cache when such actions are implemnted.
 enum cache_request_status data_cache::access(new_addr_type addr, mem_fetch *mf,
                                              unsigned time,
-                                             std::list<cache_event> &events) {
+                                             std::list<cache_event> &events,
+                                             bool l1d, bool l2) 
+{
   assert(mf->get_data_size() <= m_config.get_atom_sz());
   bool wr = mf->get_is_write();
   new_addr_type block_addr = m_config.block_addr(addr);
   unsigned cache_index = (unsigned)-1;
-  enum cache_request_status probe_status =
-      m_tag_array->probe(block_addr, cache_index, mf, mf->is_write(), true);
-  enum cache_request_status access_status =
-      process_tag_probe(wr, probe_status, addr, cache_index, mf, time, events);
+  enum cache_request_status probe_status = m_tag_array->probe(block_addr, cache_index, mf, mf->is_write(), true);
+  enum cache_request_status access_status = process_tag_probe(wr, probe_status, addr, cache_index, mf, time, events);
+
+  if (this->get_gpu()->profiler_enable())
+  {
+    if ((this->get_gpu()->get_config().m_mem_profiler_config.store_en) || (mf->get_inst().is_load()))
+    {
+      if (l1d && get_gpu()->get_config().m_mem_profiler_config.m_l1d)
+      {
+        get_gpu()->m_mem_profiler->update_l1d(
+          m_name.c_str(),
+          m_stats.select_stats_status(probe_status, access_status));
+      }
+      if (l2 && get_gpu()->get_config().m_mem_profiler_config.m_l2)
+      {
+        get_gpu()->m_mem_profiler->update_l2(
+          m_name.c_str(),
+          m_stats.select_stats_status(probe_status, access_status));
+      }
+    }
+  }
+
+//  if (mf->get_inst().is_load() && l2 && this->get_gpu()->get_config().profile_enable()) {
+//    this->get_gpu()->m_mem_profiler->update_l2(mf->get_inst().m_cta_id, 
+//              mf->get_inst().warp_id(),
+//              this->get_gpu()->gpu_sim_cycle + this->get_gpu()->gpu_tot_sim_cycle,
+//              m_stats.select_stats_status(probe_status, access_status));
+//  }
+
   m_stats.inc_stats(mf->get_access_type(),
                     m_stats.select_stats_status(probe_status, access_status));
   m_stats.inc_stats_pw(mf->get_access_type(), m_stats.select_stats_status(
@@ -1772,8 +1800,9 @@ enum cache_request_status data_cache::access(new_addr_type addr, mem_fetch *mf,
 /// (the policy used in fermi according to the CUDA manual)
 enum cache_request_status l1_cache::access(new_addr_type addr, mem_fetch *mf,
                                            unsigned time,
-                                           std::list<cache_event> &events) {
-  return data_cache::access(addr, mf, time, events);
+                                           std::list<cache_event> &events,
+                                           bool l1d, bool l2) {
+  return data_cache::access(addr, mf, time, events, l1d, l2);
 }
 
 // The l2 cache access function calls the base data_cache access
@@ -1781,8 +1810,9 @@ enum cache_request_status l1_cache::access(new_addr_type addr, mem_fetch *mf,
 // changes should be made here.
 enum cache_request_status l2_cache::access(new_addr_type addr, mem_fetch *mf,
                                            unsigned time,
-                                           std::list<cache_event> &events) {
-  return data_cache::access(addr, mf, time, events);
+                                           std::list<cache_event> &events,
+                                           bool l1d, bool l2) {
+  return data_cache::access(addr, mf, time, events, l1d, l2);
 }
 
 /// Access function for tex_cache
@@ -1792,7 +1822,8 @@ enum cache_request_status l2_cache::access(new_addr_type addr, mem_fetch *mf,
 /// mean the data is ready (still need to get through fragment fifo)
 enum cache_request_status tex_cache::access(new_addr_type addr, mem_fetch *mf,
                                             unsigned time,
-                                            std::list<cache_event> &events) {
+                                            std::list<cache_event> &events,
+                                            bool l1d, bool l2) {
   if (m_fragment_fifo.full() || m_request_fifo.full() || m_rob.full())
     return RESERVATION_FAIL;
 

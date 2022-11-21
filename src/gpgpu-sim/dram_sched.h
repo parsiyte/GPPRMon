@@ -48,6 +48,7 @@ class frfcfs_scheduler {
   void print(FILE *fp);
   unsigned num_pending() const { return m_num_pending; }
   unsigned num_write_pending() const { return m_num_write_pending; }
+  dram_t * get_dram() { return m_dram; }
 
  private:
   const memory_config *m_config;

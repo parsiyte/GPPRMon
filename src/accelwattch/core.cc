@@ -95,8 +95,16 @@ InstFetchU::InstFetchU(ParseXML* XML_interface, int ithCore_,
       ID_inst(0),
       ID_operand(0),
       ID_misc(0),
-      exist(exist_) {
-  if (!exist) return;
+      exist(exist_) 
+{
+
+  if (!exist) 
+    return;
+
+  f_core_inst_fu_cache = NULL;
+  f_core_inst_fu_buffer = NULL;
+  f_core_inst_fu_decoder = NULL;
+
   int idx, tag, data, size, line, assoc, banks;
   bool debug = false, is_default = true;
 
@@ -2868,7 +2876,8 @@ RENAMINGU::RENAMINGU(ParseXML* XML_interface, int ithCore_,
   }
 }
 
-Core::Core(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_)
+Core::Core(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_, unsigned long long *cycle,
+           unsigned long long *tot_cycle)
     : XML(XML_interface),
       ithCore(ithCore_),
       interface_ip(*interface_ip_),
@@ -3440,147 +3449,52 @@ void InstFetchU::computeEnergy(bool is_tdp) {
   }
 }
 
-void InstFetchU::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
-  if (!exist) return;
+void InstFetchU::displayEnergy(uint32_t indent, int plevel, bool is_tdp) 
+{
+  if (!exist) 
+    return;
   string indent_str(indent, ' ');
   string indent_str_next(indent + 2, ' ');
   bool long_channel = XML->sys.longer_channel_device;
 
-  if (is_tdp) {
-    cout << indent_str << "Instruction Cache:" << endl;
-    cout << indent_str_next << "Area = " << icache.area.get_area() * 1e-6
-         << " mm^2" << endl;
-    cout << indent_str_next
-         << "Peak Dynamic = " << icache.power.readOp.dynamic * clockRate << " W"
-         << endl;
-    cout << indent_str_next << "Subthreshold Leakage = "
-         << (long_channel ? icache.power.readOp.longer_channel_leakage
-                          : icache.power.readOp.leakage)
-         << " W" << endl;
-    cout << indent_str_next
-         << "Gate Leakage = " << icache.power.readOp.gate_leakage << " W"
-         << endl;
-    cout << indent_str_next << "Runtime Dynamic = "
-         << icache.rt_power.readOp.dynamic / executionTime << " W" << endl;
-    cout << endl;
-    if (coredynp.predictionW > 0) {
-      cout << indent_str << "Branch Target Buffer:" << endl;
-      cout << indent_str_next << "Area = " << BTB->area.get_area() * 1e-6
-           << " mm^2" << endl;
-      cout << indent_str_next
-           << "Peak Dynamic = " << BTB->power.readOp.dynamic * clockRate << " W"
-           << endl;
-      cout << indent_str_next << "Subthreshold Leakage = "
-           << (long_channel ? BTB->power.readOp.longer_channel_leakage
-                            : BTB->power.readOp.leakage)
-           << " W" << endl;
-      cout << indent_str_next
-           << "Gate Leakage = " << BTB->power.readOp.gate_leakage << " W"
-           << endl;
-      cout << indent_str_next << "Runtime Dynamic = "
-           << BTB->rt_power.readOp.dynamic / executionTime << " W" << endl;
-      cout << endl;
-      if (BPT->exist) {
-        cout << indent_str << "Branch Predictor:" << endl;
-        cout << indent_str_next << "Area = " << BPT->area.get_area() * 1e-6
-             << " mm^2" << endl;
-        cout << indent_str_next
-             << "Peak Dynamic = " << BPT->power.readOp.dynamic * clockRate
-             << " W" << endl;
-        cout << indent_str_next << "Subthreshold Leakage = "
-             << (long_channel ? BPT->power.readOp.longer_channel_leakage
-                              : BPT->power.readOp.leakage)
-             << " W" << endl;
-        cout << indent_str_next
-             << "Gate Leakage = " << BPT->power.readOp.gate_leakage << " W"
-             << endl;
-        cout << indent_str_next << "Runtime Dynamic = "
-             << BPT->rt_power.readOp.dynamic / executionTime << " W" << endl;
-        cout << endl;
-        if (plevel > 3) {
-          BPT->displayEnergy(indent + 4, plevel, is_tdp);
-        }
-      }
-    }
-    cout << indent_str << "Instruction Buffer:" << endl;
-    cout << indent_str_next << "Area = " << IB->area.get_area() * 1e-6
-         << " mm^2" << endl;
-    cout << indent_str_next
-         << "Peak Dynamic = " << IB->power.readOp.dynamic * clockRate << " W"
-         << endl;
-    cout << indent_str_next << "Subthreshold Leakage = "
-         << (long_channel ? IB->power.readOp.longer_channel_leakage
-                          : IB->power.readOp.leakage)
-         << " W" << endl;
-    cout << indent_str_next
-         << "Gate Leakage = " << IB->power.readOp.gate_leakage << " W" << endl;
-    cout << indent_str_next
-         << "Runtime Dynamic = " << IB->rt_power.readOp.dynamic / executionTime
-         << " W" << endl;
-    cout << endl;
-    cout << indent_str << "Instruction Decoder:" << endl;
-    cout << indent_str_next << "Area = "
-         << (ID_inst->area.get_area() + ID_operand->area.get_area() +
-             ID_misc->area.get_area()) *
-                coredynp.decodeW * 1e-6
-         << " mm^2" << endl;
-    cout << indent_str_next << "Peak Dynamic = "
-         << (ID_inst->power.readOp.dynamic + ID_operand->power.readOp.dynamic +
-             ID_misc->power.readOp.dynamic) *
-                clockRate
-         << " W" << endl;
-    cout << indent_str_next << "Subthreshold Leakage = "
-         << (long_channel ? (ID_inst->power.readOp.longer_channel_leakage +
-                             ID_operand->power.readOp.longer_channel_leakage +
-                             ID_misc->power.readOp.longer_channel_leakage)
-                          : (ID_inst->power.readOp.leakage +
-                             ID_operand->power.readOp.leakage +
-                             ID_misc->power.readOp.leakage))
-         << " W" << endl;
-    cout << indent_str_next << "Gate Leakage = "
-         << (ID_inst->power.readOp.gate_leakage +
-             ID_operand->power.readOp.gate_leakage +
-             ID_misc->power.readOp.gate_leakage)
-         << " W" << endl;
-    cout << indent_str_next << "Runtime Dynamic = "
-         << (ID_inst->rt_power.readOp.dynamic +
-             ID_operand->rt_power.readOp.dynamic +
-             ID_misc->rt_power.readOp.dynamic) /
-                executionTime
-         << " W" << endl;
-    cout << endl;
-  } else {
-    //		cout << indent_str_next << "Instruction Cache    Peak Dynamic =
-    //"
-    //<< icache.rt_power.readOp.dynamic*clockRate << " W" << endl;
-    // cout << indent_str_next << "Instruction Cache    Subthreshold Leakage = "
-    // << icache.rt_power.readOp.leakage <<" W" << endl; 		cout <<
-    // indent_str_next << "Instruction Cache    Gate Leakage = " <<
-    // icache.rt_power.readOp.gate_leakage << " W" << endl; 		cout <<
-    // indent_str_next << "Instruction Buffer   Peak Dynamic = " <<
-    // IB->rt_power.readOp.dynamic*clockRate  << " W" << endl; 		cout <<
-    // indent_str_next << "Instruction Buffer   Subthreshold Leakage = " <<
-    // IB->rt_power.readOp.leakage  << " W" << endl; 		cout <<
-    // indent_str_next
-    // << "Instruction Buffer   Gate Leakage = " <<
-    // IB->rt_power.readOp.gate_leakage
-    //<< " W" << endl; 		cout << indent_str_next << "Branch Target Buffer
-    // Peak Dynamic = " << BTB->rt_power.readOp.dynamic*clockRate  << " W" <<
-    // endl; 		cout << indent_str_next << "Branch Target Buffer
-    // Subthreshold Leakage = " << BTB->rt_power.readOp.leakage  << " W" <<
-    // endl; 		cout
-    // << indent_str_next << "Branch Target Buffer   Gate Leakage = " <<
-    // BTB->rt_power.readOp.gate_leakage  << " W" << endl; 		cout <<
-    // indent_str_next << "Branch Predictor   Peak Dynamic = " <<
-    // BPT->rt_power.readOp.dynamic*clockRate  << " W" << endl;
-    // cout
-    // << indent_str_next << "Branch Predictor   Subthreshold Leakage = " <<
-    // BPT->rt_power.readOp.leakage  << " W" << endl; 		cout <<
-    // indent_str_next
-    // << "Branch Predictor   Gate Leakage = " <<
-    // BPT->rt_power.readOp.gate_leakage
-    //<< " W" << endl;
-  }
+  if (is_tdp) 
+  {
+//    fprintf(f_core_inst_fu_cache, "Cycle,Area(mm^2),PeakDynm(W),SubThresholdLeak(W),"
+//                                  "GateLeak(W),RunTimeDynm(W)\n",
+//                  icache.area.get_area() * 1e-6,
+//                  icache.power.readOp.dynamic * clockRate,
+//    (long_channel ? icache.power.readOp.longer_channel_leakage
+//                  : icache.power.readOp.leakage),
+//                  icache.power.readOp.gate_leakage,
+//                  icache.rt_power.readOp.dynamic / executionTime);  
+//
+//
+//    fprintf(f_core_inst_fu_buffer, "Cycle,Area(mm^2),PeakDynm(W),SubThresholdLeak(W),"
+//                                  "GateLeak(W),RunTimeDynm(W)\n",
+//                  IB->area.get_area() * 1e-6,
+//                  IB->power.readOp.dynamic * clockRate,
+//    (long_channel ? IB->power.readOp.longer_channel_leakage
+//                  : IB->power.readOp.leakage),
+//                  IB->power.readOp.gate_leakage,
+//                  IB->rt_power.readOp.dynamic / executionTime)
+
+
+//    fprintf(f_core_inst_fu_decoder, "Cycle,Area(mm^2),PeakDynm(W),SubThresholdLeak(W),"
+//                                  "GateLeak(W),RunTimeDynm(W)\n",
+//        (ID_inst->area.get_area() + ID_operand->area.get_area() +
+//         ID_misc->area.get_area()) * coredynp.decodeW * 1e-6,
+//        (ID_inst->power.readOp.dynamic + ID_operand->power.readOp.dynamic +
+//         ID_misc->power.readOp.dynamic) * clockRate,
+//        (long_channel ? (ID_inst->power.readOp.longer_channel_leakage +
+//          ID_operand->power.readOp.longer_channel_leakage +
+//          ID_misc->power.readOp.longer_channel_leakage)
+//         : (ID_inst->power.readOp.leakage +
+//          ID_operand->power.readOp.leakage + ID_misc->power.readOp.leakage)),
+//        (ID_inst->power.readOp.gate_leakage +  ID_operand->power.readOp.gate_leakage +
+//         ID_misc->power.readOp.gate_leakage),
+//        (ID_inst->rt_power.readOp.dynamic + ID_operand->rt_power.readOp.dynamic +
+//         ID_misc->rt_power.readOp.dynamic) / executionTime);
+  } 
 }
 
 void RENAMINGU::computeEnergy(bool is_tdp) {
@@ -6229,233 +6143,150 @@ void Core::computeEnergy(bool is_tdp) {
   }
 }
 
+void Core::open_folders()
+{
+  f_core_inst_fu = fopen("runtime_profiling_metrics/energy_consumption/f_core_inst_fu.csv", "w+");
+  f_core_ldst_u = fopen("runtime_profiling_metrics/energy_consumption/f_core_ldst_u.csv", "w+");
+  f_core_eu = fopen("runtime_profiling_metrics/energy_consumption/f_core_eu.csv", "w+");
+  f_core_idle = fopen("runtime_profiling_metrics/energy_consumption/f_core_idle.csv", "w+");
+
+  if (!(f_core_inst_fu && f_core_ldst_u && f_core_eu && f_core_idle)) {
+    printf("One of the main Processor csv files to track power consumption cannot be opened among core files\n");
+    exit(1);
+  }  
+
+  fprintf(f_core_inst_fu, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_core_inst_fu);
+
+  fprintf(f_core_ldst_u, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_core_ldst_u);
+
+  fprintf(f_core_eu, "Cycle,Area(mm^2),PeakDynamic(W),PeakDynamicEnergy(W),clockRate(MHz),SubthresholdLeakage(W),"
+                     "GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_core_eu);
+
+  fprintf(f_core_idle, "Cycle,RunTimeDynamic(W)\n");
+  fflush(f_core_idle);
+}
+
+void Core::reopen_folders(unsigned long long cycle){
+  fclose(f_core_inst_fu);
+  fclose(f_core_ldst_u);
+  fclose(f_core_eu);
+  fclose(f_core_idle);
+
+  f_core_inst_fu = NULL;
+  f_core_ldst_u = NULL;
+  f_core_eu = NULL;
+  f_core_idle = NULL;
+
+  unsigned seq = cycle / 1000000;
+  char comm[256];
+  sprintf(comm, "runtime_profiling_metrics/energy_consumption/f_core_inst_fu_%u.csv", seq);
+  f_core_inst_fu = fopen(comm, "w+");
+
+  char comm_2[256];
+  sprintf(comm_2, "runtime_profiling_metrics/energy_consumption/f_core_ldst_u_%u.csv", seq);
+  f_core_ldst_u = fopen(comm_2, "w+");
+
+  char comm_3[256];
+  sprintf(comm_3, "runtime_profiling_metrics/energy_consumption/f_core_eu_%u.csv", seq);
+  f_core_eu = fopen(comm_3, "w+");
+
+  char comm_4[256];
+  sprintf(comm_4, "runtime_profiling_metrics/energy_consumption/f_core_idle_%u.csv", seq);
+  f_core_idle = fopen(comm_4, "w+");
+
+  if (!(f_core_inst_fu && f_core_ldst_u && f_core_eu && f_core_idle)) {
+    printf("One of the main Processor csv files to track power consumption cannot be opened among core files\n");
+    exit(1);
+  }  
+
+  fprintf(f_core_inst_fu, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_core_inst_fu);
+
+  fprintf(f_core_ldst_u, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_core_ldst_u);
+
+  fprintf(f_core_eu, "Cycle,Area(mm^2),PeakDynamic(W),PeakDynamicEnergy(W),clockRate(MHz),SubthresholdLeakage(W),"
+                     "GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_core_eu);
+
+  fprintf(f_core_idle, "Cycle,RunTimeDynamic(W)\n");
+  fflush(f_core_idle);
+}
+
+
 void Core::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
   string indent_str(indent, ' ');
   string indent_str_next(indent + 2, ' ');
   bool long_channel = XML->sys.longer_channel_device;
-  if (is_tdp) {
-    cout << "Core:" << endl;
-    cout << indent_str << "Area = " << area.get_area() * 1e-6 << " mm^2"
-         << endl;
-    cout << indent_str << "Peak Dynamic = " << power.readOp.dynamic * clockRate
-         << " W" << endl;
-    cout << indent_str << "Subthreshold Leakage = "
-         << (long_channel ? power.readOp.longer_channel_leakage
-                          : power.readOp.leakage)
-         << " W" << endl;
-    // cout << indent_str << "Subthreshold Leakage = " <<
-    // power.readOp.longer_channel_leakage <<" W" << endl;
-    cout << indent_str << "Gate Leakage = " << power.readOp.gate_leakage << " W"
-         << endl;
-    cout << indent_str
-         << "Runtime Dynamic = " << rt_power.readOp.dynamic / executionTime
-         << " W" << endl;
-    cout << endl;
-    if (ifu->exist) {
-      cout << indent_str << "Instruction Fetch Unit:" << endl;
-      cout << indent_str_next << "Area = " << ifu->area.get_area() * 1e-6
-           << " mm^2" << endl;
-      cout << indent_str_next
-           << "Peak Dynamic = " << ifu->power.readOp.dynamic * clockRate << " W"
-           << endl;
-      cout << indent_str_next << "Subthreshold Leakage = "
-           << (long_channel ? ifu->power.readOp.longer_channel_leakage
-                            : ifu->power.readOp.leakage)
-           << " W" << endl;
-      // cout << indent_str_next << "Subthreshold Leakage = " <<
-      // ifu->power.readOp.longer_channel_leakage <<" W" << endl;
-      cout << indent_str_next
-           << "Gate Leakage = " << ifu->power.readOp.gate_leakage << " W"
-           << endl;
-      cout << indent_str_next << "Runtime Dynamic = "
-           << ifu->rt_power.readOp.dynamic / executionTime << " W" << endl;
-      cout << endl;
-      if (plevel > 2) {
-        ifu->displayEnergy(indent + 4, plevel, is_tdp);
-      }
-    }
-    if (coredynp.core_ty == OOO) {
-      if (rnu->exist) {
-        cout << indent_str << "Renaming Unit:" << endl;
-        cout << indent_str_next << "Area = " << rnu->area.get_area() * 1e-6
-             << " mm^2" << endl;
-        cout << indent_str_next
-             << "Peak Dynamic = " << rnu->power.readOp.dynamic * clockRate
-             << " W" << endl;
-        cout << indent_str_next << "Subthreshold Leakage = "
-             << (long_channel ? rnu->power.readOp.longer_channel_leakage
-                              : rnu->power.readOp.leakage)
-             << " W" << endl;
-        // cout << indent_str_next << "Subthreshold Leakage = " <<
-        // rnu->power.readOp.longer_channel_leakage  << " W" << endl;
-        cout << indent_str_next
-             << "Gate Leakage = " << rnu->power.readOp.gate_leakage << " W"
-             << endl;
-        cout << indent_str_next << "Runtime Dynamic = "
-             << rnu->rt_power.readOp.dynamic / executionTime << " W" << endl;
-        cout << endl;
-        if (plevel > 2) {
-          rnu->displayEnergy(indent + 4, plevel, is_tdp);
-        }
-      }
+
+  if (power_prof_en == false)
+  {
+    open_folders();
+    power_prof_en = true;
+  }
+
+  if ((*proc_cycle + *proc_tot_cycle) % 1000000 == 0 && (*proc_cycle + *proc_tot_cycle) > 25000)
+    reopen_folders(*proc_cycle + *proc_tot_cycle);
+
+  if (is_tdp && power_prof_en && (proc_cycle != NULL && proc_tot_cycle != NULL)) 
+  {
+    if (ifu->exist) 
+    {
+      fprintf(f_core_inst_fu, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
+                     *proc_cycle + *proc_tot_cycle,
+                      ifu->area.get_area() * 1e-6,
+                      ifu->power.readOp.dynamic * clockRate,
+        (long_channel ? ifu->power.readOp.longer_channel_leakage
+                      : ifu->power.readOp.leakage),
+                      ifu->power.readOp.gate_leakage,
+                      ifu->rt_power.readOp.dynamic / executionTime);
+      fflush(f_core_inst_fu);
+      //if (plevel > 2) 
+      //{
+      //  ifu->displayEnergy(indent + 4, plevel, is_tdp);
+      //}
     }
     if (lsu->exist) {
-      cout << indent_str << "Load Store Unit:" << endl;
-      cout << indent_str_next << "Area = " << lsu->area.get_area() * 1e-6
-           << " mm^2" << endl;
-      cout << indent_str_next
-           << "Peak Dynamic = " << lsu->power.readOp.dynamic * clockRate << " W"
-           << endl;
-      cout << indent_str_next << "Subthreshold Leakage = "
-           << (long_channel ? lsu->power.readOp.longer_channel_leakage
-                            : lsu->power.readOp.leakage)
-           << " W" << endl;
-      // cout << indent_str_next << "Subthreshold Leakage = " <<
-      // lsu->power.readOp.longer_channel_leakage  << " W" << endl;
-      cout << indent_str_next
-           << "Gate Leakage = " << lsu->power.readOp.gate_leakage << " W"
-           << endl;
-      cout << indent_str_next << "Runtime Dynamic = "
-           << lsu->rt_power.readOp.dynamic / executionTime << " W" << endl;
-      cout << endl;
-      if (plevel > 2) {
-        lsu->displayEnergy(indent + 4, plevel, is_tdp);
-      }
-    }
-    if (mmu->exist) {
-      cout << indent_str << "Memory Management Unit:" << endl;
-      cout << indent_str_next << "Area = " << mmu->area.get_area() * 1e-6
-           << " mm^2" << endl;
-      cout << indent_str_next
-           << "Peak Dynamic = " << mmu->power.readOp.dynamic * clockRate << " W"
-           << endl;
-      cout << indent_str_next << "Subthreshold Leakage = "
-           << (long_channel ? mmu->power.readOp.longer_channel_leakage
-                            : mmu->power.readOp.leakage)
-           << " W" << endl;
-      // cout << indent_str_next << "Subthreshold Leakage = " <<
-      // mmu->power.readOp.longer_channel_leakage   << " W" << endl;
-      cout << indent_str_next
-           << "Gate Leakage = " << mmu->power.readOp.gate_leakage << " W"
-           << endl;
-      cout << indent_str_next << "Runtime Dynamic = "
-           << mmu->rt_power.readOp.dynamic / executionTime << " W" << endl;
-      cout << endl;
-      if (plevel > 2) {
-        mmu->displayEnergy(indent + 4, plevel, is_tdp);
-      }
+      fprintf(f_core_ldst_u, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
+                              *proc_cycle + *proc_tot_cycle,
+                              lsu->area.get_area() * 1e-6,
+                              lsu->power.readOp.dynamic * clockRate,
+                        (long_channel ? lsu->power.readOp.longer_channel_leakage
+                              : lsu->power.readOp.leakage),
+                              lsu->power.readOp.gate_leakage,
+                              lsu->rt_power.readOp.dynamic / executionTime);
+      fflush(f_core_ldst_u);
+      //if (plevel > 2) {
+      //  lsu->displayEnergy(indent + 4, plevel, is_tdp);
+      //}
     }
     if (exu->exist) {
-      cout << indent_str << "Execution Unit:" << endl;
-      cout << indent_str_next << "Area = " << exu->area.get_area() * 1e-6
-           << " mm^2" << endl;
-      cout << indent_str_next
-           << "Peak Dynamic = " << exu->power.readOp.dynamic * clockRate << " W"
-           << endl;
-      cout << indent_str_next
-           << "Peak Dynamic Energy = " << exu->power.readOp.dynamic << " W"
-           << endl;
-      cout << indent_str_next << "clock Rate = " << clockRate << " W" << endl;
-
-      cout << indent_str_next << "Subthreshold Leakage = "
-           << (long_channel ? exu->power.readOp.longer_channel_leakage
-                            : exu->power.readOp.leakage)
-           << " W" << endl;
-      // cout << indent_str_next << "Subthreshold Leakage = " <<
-      // exu->power.readOp.longer_channel_leakage << " W" << endl;
-      cout << indent_str_next
-           << "Gate Leakage = " << exu->power.readOp.gate_leakage << " W"
-           << endl;
-      cout << indent_str_next << "Runtime Dynamic = "
-           << exu->rt_power.readOp.dynamic / executionTime << " W" << endl;
-      cout << endl;
-      if (plevel > 2) {
-        exu->displayEnergy(indent + 4, plevel, is_tdp);
-      }
+      fprintf(f_core_eu, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
+                        *proc_cycle + *proc_tot_cycle,
+                         exu->area.get_area() * 1e-6,
+                         exu->power.readOp.dynamic * clockRate,
+                         exu->power.readOp.dynamic,
+                         clockRate,
+           (long_channel ? exu->power.readOp.longer_channel_leakage
+                         : exu->power.readOp.leakage),
+                         exu->power.readOp.gate_leakage,
+                         exu->rt_power.readOp.dynamic / executionTime);
+      fflush(f_core_eu);
+      //if (plevel > 2) {
+      //  exu->displayEnergy(indent + 4, plevel, is_tdp);
+      //}
     }
-    //		if (plevel >2)
-    //		{
-    //			if (undiffCore->exist)
-    //			{
-    //				cout << indent_str << "Undifferentiated Core" <<
-    // endl; 				cout << indent_str_next << "Area = " <<
-    // undiffCore->area.get_area()*1e-6<< " mm^2" << endl;
-    // cout
-    // << indent_str_next << "Peak Dynamic = " <<
-    // undiffCore->power.readOp.dynamic*clockRate << " W" << endl;
-    ////				cout << indent_str_next << "Subthreshold
-    /// Leakage
-    ///=
-    ///"
-    ///<< undiffCore->power.readOp.leakage <<" W" << endl;
-    //				cout << indent_str_next << "Subthreshold Leakage
-    //=
-    //"
-    //								<<
-    //(long_channel?
-    // undiffCore->power.readOp.longer_channel_leakage:undiffCore->power.readOp.leakage)
-    //<< " W" << endl; 				cout << indent_str_next << "Gate
-    // Leakage
-    //=
-    //"
-    //<< undiffCore->power.readOp.gate_leakage << " W" << endl;
-    //				//		cout << indent_str_next <<
-    //"Runtime Dynamic
-    //=
-    //"
-    //<< undiffCore->rt_power.readOp.dynamic/executionTime << " W" << endl;
-    // cout
-    //<<endl;
-    //			}
-    //		}
-    if (XML->sys.Private_L2) {
-      l2cache->displayEnergy(4, is_tdp);
-    }
-
-    cout << indent_str << "Idle Core: " << endl;
-    cout << indent_str_next
-         << "Runtime Dynamic = " << IdleCoreEnergy / executionTime << " W\n"
-         << endl;
-
-  } else {
-    //		cout << indent_str_next << "Instruction Fetch Unit    Peak
-    // Dynamic
-    //=
-    //"
-    //<< ifu->rt_power.readOp.dynamic*clockRate << " W" << endl;
-    // cout
-    //<< indent_str_next << "Instruction Fetch Unit    Subthreshold Leakage = "
-    // << ifu->rt_power.readOp.leakage <<" W" << endl; 		cout <<
-    // indent_str_next << "Instruction Fetch Unit    Gate Leakage = " <<
-    // ifu->rt_power.readOp.gate_leakage << " W" << endl; 		cout <<
-    // indent_str_next
-    //<< "Load Store Unit   Peak Dynamic = " <<
-    // lsu->rt_power.readOp.dynamic*clockRate  << " W" << endl;
-    // cout
-    // << indent_str_next << "Load Store Unit   Subthreshold Leakage = " <<
-    // lsu->rt_power.readOp.leakage  << " W" << endl; 		cout <<
-    // indent_str_next
-    // << "Load Store Unit   Gate Leakage = " <<
-    // lsu->rt_power.readOp.gate_leakage
-    //<< " W" << endl; 		cout << indent_str_next << "Memory Management
-    // Unit Peak Dynamic = " << mmu->rt_power.readOp.dynamic*clockRate  << " W"
-    // <<
-    // endl; 		cout << indent_str_next << "Memory Management Unit
-    // Subthreshold Leakage = " << mmu->rt_power.readOp.leakage  << " W" <<
-    // endl; 		cout
-    // << indent_str_next << "Memory Management Unit   Gate Leakage = " <<
-    // mmu->rt_power.readOp.gate_leakage  << " W" << endl; 		cout <<
-    // indent_str_next << "Execution Unit   Peak Dynamic = " <<
-    // exu->rt_power.readOp.dynamic*clockRate  << " W" << endl;
-    // cout
-    // << indent_str_next << "Execution Unit   Subthreshold Leakage = " <<
-    // exu->rt_power.readOp.leakage  << " W" << endl; 		cout <<
-    // indent_str_next
-    // << "Execution Unit   Gate Leakage = " <<
-    // exu->rt_power.readOp.gate_leakage
-    //<< " W" << endl;
+    //if (XML->sys.Private_L2) {
+    //  l2cache->displayEnergy(4, is_tdp);
+    //}
+    fprintf(f_core_idle, "%llu,%.6lf\n", *proc_cycle + *proc_tot_cycle, IdleCoreEnergy / executionTime);
+    fflush(f_core_idle);
   }
 }
+
 InstFetchU ::~InstFetchU() {
   if (!exist) return;
   if (IB) {
@@ -6691,6 +6522,10 @@ Core ::~Core() {
     delete l2cache;
     l2cache = 0;
   }
+  fclose(f_core_inst_fu);
+  fclose(f_core_ldst_u);
+  fclose(f_core_eu);
+  fclose(f_core_idle);
 }
 
 void Core::set_core_param() {
@@ -6824,4 +6659,9 @@ void Core::set_core_param() {
   coredynp.executionTime = XML->sys.total_cycles / coredynp.clockRate;
   set_pppm(coredynp.pppm_lkg_multhread, 0, coredynp.num_hthreads,
            coredynp.num_hthreads, 0);
+}
+
+void Core::set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle){
+  proc_cycle = cycle;
+  proc_tot_cycle = tot_cycle;
 }

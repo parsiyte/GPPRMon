@@ -96,6 +96,7 @@ void *gpgpu_sim_thread_concurrent(void *ctx_ptr) {
     pthread_mutex_unlock(&(ctx->the_gpgpusim->g_sim_lock));
     bool active = false;
     bool sim_cycles = false;
+
     ctx->the_gpgpusim->g_the_gpu->init();
     do {
       // check if a kernel has completed

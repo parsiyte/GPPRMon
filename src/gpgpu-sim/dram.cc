@@ -47,7 +47,8 @@ template class fifo_pipeline<dram_req_t>;
 
 dram_t::dram_t(unsigned int partition_id, const memory_config *config,
                memory_stats_t *stats, memory_partition_unit *mp,
-               gpgpu_sim *gpu) {
+               gpgpu_sim *gpu) 
+{
   id = partition_id;
   m_memory_partition_unit = mp;
   m_stats = stats;
@@ -97,18 +98,25 @@ dram_t::dram_t(unsigned int partition_id, const memory_config *config,
 
   bkgrp = (bankgrp_t **)calloc(sizeof(bankgrp_t *), m_config->nbkgrp);
   bkgrp[0] = (bankgrp_t *)calloc(sizeof(bank_t), m_config->nbkgrp);
-  for (unsigned i = 1; i < m_config->nbkgrp; i++) {
+
+  for (unsigned i = 1; i < m_config->nbkgrp; i++) 
+  {
     bkgrp[i] = bkgrp[0] + i;
   }
-  for (unsigned i = 0; i < m_config->nbkgrp; i++) {
+
+  for (unsigned i = 0; i < m_config->nbkgrp; i++) 
+  {
     bkgrp[i]->CCDLc = 0;
     bkgrp[i]->RTPLc = 0;
   }
 
   bk = (bank_t **)calloc(sizeof(bank_t *), m_config->nbk);
   bk[0] = (bank_t *)calloc(sizeof(bank_t), m_config->nbk);
-  for (unsigned i = 1; i < m_config->nbk; i++) bk[i] = bk[0] + i;
-  for (unsigned i = 0; i < m_config->nbk; i++) {
+
+  for (unsigned i = 1; i < m_config->nbk; i++) 
+    bk[i] = bk[0] + i;
+  for (unsigned i = 0; i < m_config->nbk; i++) 
+  {
     bk[i]->state = BANK_IDLE;
     bk[i]->bkgrpindex = i / (m_config->nbk / m_config->nbkgrp);
   }
@@ -243,12 +251,11 @@ dram_req_t::dram_req_t(class mem_fetch *mf, unsigned banks,
   rw = data->get_is_write() ? WRITE : READ;
 }
 
-void dram_t::push(class mem_fetch *data) {
-  assert(id == data->get_tlx_addr()
-                   .chip);  // Ensure request is in correct memory partition
-
-  dram_req_t *mrq =
-      new dram_req_t(data, m_config->nbk, m_config->dram_bnk_indexing_policy,
+void dram_t::push(class mem_fetch *data) 
+{
+  // Ensure request is in correct memory partition
+  assert(id == data->get_tlx_addr().chip);  
+  dram_req_t *mrq = new dram_req_t(data, m_config->nbk, m_config->dram_bnk_indexing_policy,
                      m_memory_partition_unit->get_mgpu());
 
   data->set_status(IN_PARTITION_MC_INTERFACE_QUEUE,
@@ -258,25 +265,32 @@ void dram_t::push(class mem_fetch *data) {
   // stats...
   n_req += 1;
   n_req_partial += 1;
-  if (m_config->scheduler_type == DRAM_FRFCFS) {
+  if (m_config->scheduler_type == DRAM_FRFCFS) 
+  {
     unsigned nreqs = m_frfcfs_scheduler->num_pending();
-    if (nreqs > max_mrqs_temp) max_mrqs_temp = nreqs;
-  } else {
+    if (nreqs > max_mrqs_temp) 
+      max_mrqs_temp = nreqs;
+  } 
+  else 
+  {
     max_mrqs_temp = (max_mrqs_temp > mrqq->get_length()) ? max_mrqs_temp
                                                          : mrqq->get_length();
   }
   m_stats->memlatstat_dram_access(data);
 }
 
-void dram_t::scheduler_fifo() {
-  if (!mrqq->empty()) {
+void dram_t::scheduler_fifo() 
+{
+  if (!mrqq->empty()) 
+  {
     unsigned int bkn;
     dram_req_t *head_mrqq = mrqq->top();
     head_mrqq->data->set_status(
         IN_PARTITION_MC_BANK_ARB_QUEUE,
         m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle);
     bkn = head_mrqq->bk;
-    if (!bk[bkn]->mrq) bk[bkn]->mrq = mrqq->pop();
+    if (!bk[bkn]->mrq) 
+      bk[bkn]->mrq = mrqq->pop();
   }
 }
 
@@ -286,7 +300,8 @@ void dram_t::scheduler_fifo() {
   b ^= a;          \
   a ^= b;
 
-void dram_t::cycle() {
+void dram_t::cycle() 
+{
   if (!returnq->full()) {
     dram_req_t *cmd = rwq->pop();
     if (cmd) {

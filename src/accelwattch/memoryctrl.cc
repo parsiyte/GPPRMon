@@ -1048,86 +1048,116 @@ void MemoryController::computeEnergy(bool is_tdp) {
   }
 }
 
+void MemoryController::open_folders()
+{
+  f_mc_front_end_engine = fopen("runtime_profiling_metrics/energy_consumption"
+                                "/f_mc_front_end_engine.csv", "w+");
+  f_mc_transaction_engine = fopen("runtime_profiling_metrics/energy_consumption"
+                                "/f_mc_transaction_engine.csv", "w+");
+  f_mc_phy = fopen("runtime_profiling_metrics/energy_consumption/f_mc_phy.csv", "w+");
+
+  if (!(f_mc_front_end_engine && f_mc_transaction_engine && f_mc_phy)) {
+    printf("One of the main Processor csv files to track power consumption "
+           "cannot be opened among memory controller files\n");
+    exit(1);
+  }  
+
+  fprintf(f_mc_front_end_engine, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_mc_front_end_engine);
+  fprintf(f_mc_transaction_engine, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_mc_transaction_engine);
+  fprintf(f_mc_phy, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_mc_phy);
+}
+
+void MemoryController::reopen_folders(unsigned long long cycle){
+  fclose(f_mc_front_end_engine);
+  fclose(f_mc_transaction_engine);
+  fclose(f_mc_phy);
+
+  f_mc_front_end_engine = NULL;
+  f_mc_transaction_engine = NULL;
+  f_mc_phy = NULL;
+
+  unsigned seq = cycle / 1000000;
+  char comm[256];
+  sprintf(comm, "runtime_profiling_metrics/energy_consumption/f_mc_front_end_engine_%u.csv", seq);
+  f_mc_front_end_engine = fopen(comm, "w+");
+
+  char comm_2[256];
+  sprintf(comm_2, "runtime_profiling_metrics/energy_consumption/f_mc_transaction_engine_%u.csv", seq);
+  f_mc_transaction_engine = fopen(comm_2, "w+");
+
+  char comm_3[256];
+  sprintf(comm_3, "runtime_profiling_metrics/energy_consumption/f_mc_phy_%u.csv", seq);
+  f_mc_phy = fopen(comm_3, "w+");
+
+  if (!(f_mc_front_end_engine && f_mc_transaction_engine && f_mc_phy)) {
+    printf("One of the main Processor csv files to track power consumption "
+           "cannot be opened among memory controller files\n");
+    exit(1);
+  }  
+
+  fprintf(f_mc_front_end_engine, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_mc_front_end_engine);
+  fprintf(f_mc_transaction_engine, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_mc_transaction_engine);
+  fprintf(f_mc_phy, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+  fflush(f_mc_phy);
+}
+
+
 void MemoryController::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
   string indent_str(indent, ' ');
   string indent_str_next(indent + 2, ' ');
   bool long_channel = XML->sys.longer_channel_device;
 
-  if (is_tdp) {
-    cout << "Memory Controller:" << endl;
-    cout << indent_str << "Area = " << area.get_area() * 1e-6 << " mm^2"
-         << endl;
-    cout << indent_str
-         << "Peak Dynamic = " << power.readOp.dynamic * mcp.clockRate << " W"
-         << endl;
-    cout << indent_str << "Subthreshold Leakage = "
-         << (long_channel ? power.readOp.longer_channel_leakage
-                          : power.readOp.leakage)
-         << " W" << endl;
-    // cout << indent_str<< "Subthreshold Leakage = " <<
-    // power.readOp.longer_channel_leakage <<" W" << endl;
-    cout << indent_str << "Gate Leakage = " << power.readOp.gate_leakage << " W"
-         << endl;
-    cout << indent_str
-         << "Runtime Dynamic = " << rt_power.readOp.dynamic / mcp.executionTime
-         << " W" << endl;
-    cout << endl;
-    cout << indent_str << "Front End Engine:" << endl;
-    cout << indent_str_next << "Area = " << frontend->area.get_area() * 1e-6
-         << " mm^2" << endl;
-    cout << indent_str_next
-         << "Peak Dynamic = " << frontend->power.readOp.dynamic * mcp.clockRate
-         << " W" << endl;
-    cout << indent_str_next << "Subthreshold Leakage = "
-         << (long_channel ? frontend->power.readOp.longer_channel_leakage
-                          : frontend->power.readOp.leakage)
-         << " W" << endl;
-    cout << indent_str_next
-         << "Gate Leakage = " << frontend->power.readOp.gate_leakage << " W"
-         << endl;
-    cout << indent_str_next << "Runtime Dynamic = "
-         << frontend->rt_power.readOp.dynamic / mcp.executionTime << " W"
-         << endl;
-    cout << endl;
-    // if (plevel >2){
-    frontend->displayEnergy(indent + 4, is_tdp);
-    //}
-    cout << indent_str << "Transaction Engine:" << endl;
-    cout << indent_str_next
-         << "Area = " << transecEngine->area.get_area() * 1e-6 << " mm^2"
-         << endl;
-    cout << indent_str_next << "Peak Dynamic = "
-         << transecEngine->power.readOp.dynamic * mcp.clockRate << " W" << endl;
-    cout << indent_str_next << "Subthreshold Leakage = "
-         << (long_channel ? transecEngine->power.readOp.longer_channel_leakage
-                          : transecEngine->power.readOp.leakage)
-         << " W" << endl;
-    cout << indent_str_next
-         << "Gate Leakage = " << transecEngine->power.readOp.gate_leakage
-         << " W" << endl;
-    cout << indent_str_next << "Runtime Dynamic = "
-         << transecEngine->rt_power.readOp.dynamic / mcp.executionTime << " W"
-         << endl;
-    cout << endl;
-    if (mcp.type == 0 || (mcp.type == 1 && mcp.withPHY)) {
-      cout << indent_str << "PHY:" << endl;
-      cout << indent_str_next << "Area = " << PHY->area.get_area() * 1e-6
-           << " mm^2" << endl;
-      cout << indent_str_next
-           << "Peak Dynamic = " << PHY->power.readOp.dynamic * mcp.clockRate
-           << " W" << endl;
-      cout << indent_str_next << "Subthreshold Leakage = "
-           << (long_channel ? PHY->power.readOp.longer_channel_leakage
-                            : PHY->power.readOp.leakage)
-           << " W" << endl;
-      cout << indent_str_next
-           << "Gate Leakage = " << PHY->power.readOp.gate_leakage << " W"
-           << endl;
-      cout << indent_str_next << "Runtime Dynamic = "
-           << PHY->rt_power.readOp.dynamic / mcp.executionTime << " W" << endl;
-      cout << endl;
-    }
-  } else {
+  if (power_prof_en == false)
+  {
+    open_folders();
+    power_prof_en = true;
+  }
+
+  if ((*proc_cycle + *proc_tot_cycle) % 1000000 == 0 && (*proc_cycle + *proc_tot_cycle) > 25000)
+    reopen_folders(*proc_cycle + *proc_tot_cycle);
+
+  if (is_tdp && power_prof_en && (proc_cycle != NULL && proc_tot_cycle != NULL)) 
+  {
+     fprintf(f_mc_front_end_engine, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
+               *proc_cycle + *proc_tot_cycle,
+               frontend->area.get_area() * 1e-6,
+               frontend->power.readOp.dynamic * mcp.clockRate,
+          (long_channel ? frontend->power.readOp.longer_channel_leakage
+                          : frontend->power.readOp.leakage),
+               frontend->power.readOp.gate_leakage,
+               frontend->rt_power.readOp.dynamic / mcp.executionTime);
+     fflush(f_mc_front_end_engine);
+    //frontend->displayEnergy(indent + 4, is_tdp);
+
+     fprintf(f_mc_transaction_engine, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
+               *proc_cycle + *proc_tot_cycle,
+               transecEngine->area.get_area() * 1e-6,
+               transecEngine->power.readOp.dynamic * mcp.clockRate,
+          (long_channel ? transecEngine->power.readOp.longer_channel_leakage
+                          : transecEngine->power.readOp.leakage),
+               transecEngine->power.readOp.gate_leakage,
+               transecEngine->rt_power.readOp.dynamic / mcp.executionTime);
+     fflush(f_mc_transaction_engine);
+
+     if (mcp.type == 0 || (mcp.type == 1 && mcp.withPHY)) 
+     {
+          fprintf(f_mc_phy, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
+                   *proc_cycle + *proc_tot_cycle,
+                    PHY->area.get_area() * 1e-6,
+                    PHY->power.readOp.dynamic * mcp.clockRate,
+                    (long_channel ? PHY->power.readOp.longer_channel_leakage
+                                           : PHY->power.readOp.leakage),
+                    PHY->power.readOp.gate_leakage,
+                    PHY->rt_power.readOp.dynamic / mcp.executionTime);
+          fflush(f_mc_phy);
+     }
+  } 
+  else {
     cout << "Memory Controller:" << endl;
     cout << indent_str_next << "Area = " << area.get_area() * 1e-6 << " mm^2"
          << endl;
@@ -1243,6 +1273,12 @@ MCFrontEnd ::~MCFrontEnd() {
   }
 }
 
+void MemoryController::set_gpu_clock(unsigned long long *cycle, 
+                                     unsigned long long *tot_cycle){
+  proc_cycle = cycle;
+  proc_tot_cycle = tot_cycle;
+}
+
 MemoryController ::~MemoryController() {
   if (frontend) {
     delete frontend;
@@ -1260,4 +1296,7 @@ MemoryController ::~MemoryController() {
     delete pipeLogic;
     pipeLogic = 0;
   }
+  fclose(f_mc_front_end_engine);
+  fclose(f_mc_transaction_engine);
+  fclose(f_mc_phy);
 }

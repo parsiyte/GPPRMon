@@ -331,6 +331,9 @@ class memory_config {
 
   bool elimnate_rw_turnaround;
 
+  //mem_metric_collector
+  bool mem_metric_collection;
+
   unsigned
       data_command_freq_ratio;  // frequency ratio between DRAM data bus and
                                 // command bus (2 for GDDR3, 4 for GDDR5)
@@ -357,6 +360,17 @@ class memory_config {
 };
 
 extern bool g_interactive_debugger_enabled;
+
+struct mem_metric_profiler_conf {
+  bool m_l1d;
+  bool m_shmem;
+  bool m_l2;
+  bool m_dram;
+  bool m_noncoal;
+  unsigned sampling_cycle;
+  bool store_en;
+  bool accumulate_stats;
+};
 
 class gpgpu_sim_config : public power_config,
                          public gpgpu_functional_sim_config {
@@ -409,6 +423,7 @@ class gpgpu_sim_config : public power_config,
   }
 
   bool flush_l1() const { return gpgpu_flush_l1_cache; }
+  mem_metric_profiler_conf m_mem_profiler_config;
 
  private:
   void init_clock_domains(void);
@@ -515,6 +530,41 @@ class watchpoint_event {
   const ptx_instruction *m_inst;
 };
 
+class mem_access_profiler {
+  public:
+    mem_access_profiler(gpgpu_sim *simulator);
+    ~mem_access_profiler();
+
+    void determine_kernel_details(gpgpu_sim *simulator, kernel_info_t *kinfo);
+    void update_l1d(const char *cache_name, cache_request_status stat);
+    void print_l1d(unsigned long long cycle);
+
+    void update_l2(const char *cache_name, cache_request_status stat);
+    void print_l2(unsigned long long cycle);
+
+    void update_dram(unsigned part_id, bool hit);
+    void print_dram(unsigned long long cycle);
+
+  private:
+    FILE **l1d_cache;
+    FILE **l2_cache;
+    FILE **dram;
+
+//    FILE **file_l1d;
+//    FILE **file_l2;
+//    FILE **file_dram;
+
+    unsigned **l1d_accesses;
+    unsigned **l2_accesses;
+    unsigned **dram_accesses;
+//    unsigned warp_per_tb;
+
+    unsigned nof_cluster;
+    unsigned nof_subp;
+    unsigned nof_part;
+    bool accumulate_results;
+};
+
 class gpgpu_sim : public gpgpu_t {
  public:
   gpgpu_sim(const gpgpu_sim_config &config, gpgpu_context *ctx);
@@ -569,6 +619,7 @@ class gpgpu_sim : public gpgpu_t {
   void decrement_kernel_latency();
 
   const gpgpu_sim_config &get_config() const { return m_config; }
+
   void gpu_print_stat();
   void dump_pipeline(int mask, int s, int m) const;
 
@@ -603,6 +654,10 @@ class gpgpu_sim : public gpgpu_t {
 
   // backward pointer
   class gpgpu_context *gpgpu_ctx;
+
+  // memory access profiler
+  mem_access_profiler *m_mem_profiler;
+  bool profiler_enable() {return m_memory_config->mem_metric_collection;}
 
  private:
   // clocks
@@ -667,8 +722,7 @@ class gpgpu_sim : public gpgpu_t {
 
   std::vector<std::string>
       m_executed_kernel_names;  //< names of kernel for stat printout
-  std::vector<unsigned>
-      m_executed_kernel_uids;  //< uids of kernel launches for stat printout
+  std::vector<unsigned> m_executed_kernel_uids;  //< uids of kernel launches for stat printout
   std::map<unsigned, watchpoint_event> g_watchpoint_hits;
 
   std::string executed_kernel_info_string();  //< format the kernel information

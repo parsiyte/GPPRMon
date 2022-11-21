@@ -995,7 +995,8 @@ void shader_core_ctx::fetch() {
           else
             status = m_L1I->access(
                 (new_addr_type)ppc, mf,
-                m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle, events);
+                m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle, events,
+                false, false);
 
           if (status == MISS) {
             m_last_warp_fetched = warp_id;
@@ -1888,11 +1889,14 @@ bool ldst_unit::shared_cycle(warp_inst_t &inst, mem_stage_stall_type &rc_fail,
 mem_stage_stall_type ldst_unit::process_cache_access(
     cache_t *cache, new_addr_type address, warp_inst_t &inst,
     std::list<cache_event> &events, mem_fetch *mf,
-    enum cache_request_status status) {
+    enum cache_request_status status) 
+{
   mem_stage_stall_type result = NO_RC_FAIL;
   bool write_sent = was_write_sent(events);
   bool read_sent = was_read_sent(events);
-  if (write_sent) {
+  
+  if (write_sent) 
+  {
     unsigned inc_ack = (m_config->m_L1D_config.get_mshr_type() == SECTOR_ASSOC)
                            ? (mf->get_data_size() / SECTOR_SIZE)
                            : 1;
@@ -1900,58 +1904,75 @@ mem_stage_stall_type ldst_unit::process_cache_access(
     for (unsigned i = 0; i < inc_ack; ++i)
       m_core->inc_store_req(inst.warp_id());
   }
-  if (status == HIT) {
+  if (status == HIT) 
+  {
     assert(!read_sent);
     inst.accessq_pop_back();
-    if (inst.is_load()) {
+    if (inst.is_load()) 
+    {
       for (unsigned r = 0; r < MAX_OUTPUT_VALUES; r++)
-        if (inst.out[r] > 0) m_pending_writes[inst.warp_id()][inst.out[r]]--;
+        if (inst.out[r] > 0) 
+          m_pending_writes[inst.warp_id()][inst.out[r]]--;
     }
-    if (!write_sent) delete mf;
-  } else if (status == RESERVATION_FAIL) {
+    if (!write_sent) 
+      delete mf;
+  } 
+  else if (status == RESERVATION_FAIL) 
+  {
     result = BK_CONF;
     assert(!read_sent);
     assert(!write_sent);
     delete mf;
-  } else {
+  } 
+  else 
+  {
     assert(status == MISS || status == HIT_RESERVED);
     // inst.clear_active( access.get_warp_mask() ); // threads in mf writeback
     // when mf returns
     inst.accessq_pop_back();
   }
-  if (!inst.accessq_empty() && result == NO_RC_FAIL) result = COAL_STALL;
+  if (!inst.accessq_empty() && result == NO_RC_FAIL) 
+    result = COAL_STALL;
   return result;
 }
 
 mem_stage_stall_type ldst_unit::process_memory_access_queue(cache_t *cache,
                                                             warp_inst_t &inst) {
   mem_stage_stall_type result = NO_RC_FAIL;
-  if (inst.accessq_empty()) return result;
+  if (inst.accessq_empty()) 
+    return result;
 
-  if (!cache->data_port_free()) return DATA_PORT_STALL;
+  if (!cache->data_port_free()) 
+    return DATA_PORT_STALL;
 
   // const mem_access_t &access = inst.accessq_back();
   mem_fetch *mf = m_mf_allocator->alloc(
       inst, inst.accessq_back(),
       m_core->get_gpu()->gpu_sim_cycle + m_core->get_gpu()->gpu_tot_sim_cycle);
   std::list<cache_event> events;
+
   enum cache_request_status status = cache->access(
       mf->get_addr(), mf,
       m_core->get_gpu()->gpu_sim_cycle + m_core->get_gpu()->gpu_tot_sim_cycle,
-      events);
+      events,
+      false, false);
   return process_cache_access(cache, mf->get_addr(), inst, events, mf, status);
 }
 
 mem_stage_stall_type ldst_unit::process_memory_access_queue_l1cache(
-    l1_cache *cache, warp_inst_t &inst) {
+    l1_cache *cache, warp_inst_t &inst) 
+{
   mem_stage_stall_type result = NO_RC_FAIL;
-  if (inst.accessq_empty()) return result;
+  if (inst.accessq_empty()) 
+    return result;
 
-  if (m_config->m_L1D_config.l1_latency > 0) {
+  if (m_config->m_L1D_config.l1_latency > 0) 
+  {
     for (int j = 0; j < m_config->m_L1D_config.l1_banks;
          j++) {  // We can handle at max l1_banks reqs per cycle
 
-      if (inst.accessq_empty()) return result;
+      if (inst.accessq_empty()) 
+        return result;
 
       mem_fetch *mf =
           m_mf_allocator->alloc(inst, inst.accessq_back(),
@@ -1961,10 +1982,12 @@ mem_stage_stall_type ldst_unit::process_memory_access_queue_l1cache(
       assert(bank_id < m_config->m_L1D_config.l1_banks);
 
       if ((l1_latency_queue[bank_id][m_config->m_L1D_config.l1_latency - 1]) ==
-          NULL) {
+          NULL)
+      {
         l1_latency_queue[bank_id][m_config->m_L1D_config.l1_latency - 1] = mf;
 
-        if (mf->get_inst().is_store()) {
+        if (mf->get_inst().is_store()) 
+        {
           unsigned inc_ack =
               (m_config->m_L1D_config.get_mshr_type() == SECTOR_ASSOC)
                   ? (mf->get_data_size() / SECTOR_SIZE)
@@ -1975,7 +1998,9 @@ mem_stage_stall_type ldst_unit::process_memory_access_queue_l1cache(
         }
 
         inst.accessq_pop_back();
-      } else {
+      } 
+      else 
+      {
         result = BK_CONF;
         delete mf;
         break;  // do not try again, just break from the loop and try the next
@@ -1985,16 +2010,18 @@ mem_stage_stall_type ldst_unit::process_memory_access_queue_l1cache(
     if (!inst.accessq_empty() && result != BK_CONF) result = COAL_STALL;
 
     return result;
-  } else {
+  } 
+  else 
+  {
     mem_fetch *mf =
         m_mf_allocator->alloc(inst, inst.accessq_back(),
                               m_core->get_gpu()->gpu_sim_cycle +
-                                  m_core->get_gpu()->gpu_tot_sim_cycle);
+                              m_core->get_gpu()->gpu_tot_sim_cycle);
     std::list<cache_event> events;
     enum cache_request_status status = cache->access(
         mf->get_addr(), mf,
         m_core->get_gpu()->gpu_sim_cycle + m_core->get_gpu()->gpu_tot_sim_cycle,
-        events);
+        events, true, false);
     return process_cache_access(cache, mf->get_addr(), inst, events, mf,
                                 status);
   }
@@ -2008,8 +2035,9 @@ void ldst_unit::L1_latency_queue_cycle() {
       enum cache_request_status status =
           m_L1D->access(mf_next->get_addr(), mf_next,
                         m_core->get_gpu()->gpu_sim_cycle +
-                            m_core->get_gpu()->gpu_tot_sim_cycle,
-                        events);
+                        m_core->get_gpu()->gpu_tot_sim_cycle,
+                        events,
+                        true, false);
 
       bool write_sent = was_write_sent(events);
       bool read_sent = was_read_sent(events);
@@ -2170,7 +2198,9 @@ bool ldst_unit::memory_cycle(warp_inst_t &inst,
       } else if (inst.is_store())
         m_core->inc_store_req(inst.warp_id());
     }
-  } else {
+  } 
+  else 
+  {
     assert(CACHE_UNDEFINED != inst.cache_op);
     stall_cond = process_memory_access_queue_l1cache(m_L1D, inst);
   }
@@ -2490,7 +2520,8 @@ ldst_unit::ldst_unit(mem_fetch_interface *icnt,
   assert(config->smem_latency > 1);
   init(icnt, mf_allocator, core, operand_collector, scoreboard, config,
        mem_config, stats, sid, tpc);
-  if (!m_config->m_L1D_config.disabled()) {
+  if (!m_config->m_L1D_config.disabled()) 
+  {
     char L1D_name[STRSIZE];
     snprintf(L1D_name, STRSIZE, "L1D_%03d", m_sid);
     m_L1D = new l1_cache(L1D_name, m_config->m_L1D_config, m_sid,

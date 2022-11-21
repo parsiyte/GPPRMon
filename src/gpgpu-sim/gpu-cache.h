@@ -1237,7 +1237,8 @@ class cache_t {
   virtual ~cache_t() {}
   virtual enum cache_request_status access(new_addr_type addr, mem_fetch *mf,
                                            unsigned time,
-                                           std::list<cache_event> &events) = 0;
+                                           std::list<cache_event> &events,
+                                           bool l1d, bool l2) = 0;
 
   // accessors for cache bandwidth availability
   virtual bool data_port_free() const = 0;
@@ -1282,7 +1283,8 @@ class baseline_cache : public cache_t {
 
   virtual enum cache_request_status access(new_addr_type addr, mem_fetch *mf,
                                            unsigned time,
-                                           std::list<cache_event> &events) = 0;
+                                           std::list<cache_event> &events,
+                                           bool l1d, bool l2) = 0;
   /// Sends next request to lower level of memory
   void cycle();
   /// Interface for response from lower memory level (model bandwidth
@@ -1451,7 +1453,8 @@ class read_only_cache : public baseline_cache {
   /// could not be accepted (for any reason)
   virtual enum cache_request_status access(new_addr_type addr, mem_fetch *mf,
                                            unsigned time,
-                                           std::list<cache_event> &events);
+                                           std::list<cache_event> &events,
+                                           bool l1d, bool l2);
 
   virtual ~read_only_cache() {}
 
@@ -1476,6 +1479,8 @@ class data_cache : public baseline_cache {
     m_wrbk_type = wrbk_type;
     m_gpu = gpu;
   }
+
+  gpgpu_sim* get_gpu() {return m_gpu;}
 
   virtual ~data_cache() {}
 
@@ -1533,7 +1538,8 @@ class data_cache : public baseline_cache {
 
   virtual enum cache_request_status access(new_addr_type addr, mem_fetch *mf,
                                            unsigned time,
-                                           std::list<cache_event> &events);
+                                           std::list<cache_event> &events,
+                                           bool l1d, bool l2);
 
  protected:
   data_cache(const char *name, cache_config &config, int core_id, int type_id,
@@ -1667,7 +1673,8 @@ class l1_cache : public data_cache {
 
   virtual enum cache_request_status access(new_addr_type addr, mem_fetch *mf,
                                            unsigned time,
-                                           std::list<cache_event> &events);
+                                           std::list<cache_event> &events,
+                                           bool l1d, bool l2);
 
  protected:
   l1_cache(const char *name, cache_config &config, int core_id, int type_id,
@@ -1692,7 +1699,8 @@ class l2_cache : public data_cache {
 
   virtual enum cache_request_status access(new_addr_type addr, mem_fetch *mf,
                                            unsigned time,
-                                           std::list<cache_event> &events);
+                                           std::list<cache_event> &events,
+                                           bool l1d, bool l2);
 };
 
 /*****************************************************************************/
@@ -1731,7 +1739,8 @@ class tex_cache : public cache_t {
   /// mean the data is ready (still need to get through fragment fifo)
   enum cache_request_status access(new_addr_type addr, mem_fetch *mf,
                                    unsigned time,
-                                   std::list<cache_event> &events);
+                                   std::list<cache_event> &events,
+                                   bool l1d, bool l2);
   void cycle();
   /// Place returning cache block into reorder buffer
   void fill(mem_fetch *mf, unsigned time);

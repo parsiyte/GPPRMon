@@ -91,12 +91,16 @@ class InstFetchU : public Component {
   inst_decoder *ID_operand;
   inst_decoder *ID_misc;
   bool exist;
-
   InstFetchU(ParseXML *XML_interface, int ithCore_,
              InputParameter *interface_ip_, const CoreDynParam &dyn_p_,
              bool exsit = true);
   void computeEnergy(bool is_tdp = true);
   void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
+
+  FILE *f_core_inst_fu_cache;
+  FILE *f_core_inst_fu_buffer;
+  FILE *f_core_inst_fu_decoder;
+
   ~InstFetchU();
 };
 
@@ -120,6 +124,11 @@ class SchedulerU : public Component {
              bool exist_ = true);
   void computeEnergy(bool is_tdp = true);
   void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
+  FILE *f_core_eu_inst_sch_inst_window;
+  FILE *f_core_eu_inst_sch_int_alus;
+  FILE *f_core_eu_inst_sch_fp_u;
+  FILE *f_core_eu_inst_sch_complex_alus;
+  FILE *f_core_eu_inst_sch_res_broad_bus;
   ~SchedulerU();
 };
 
@@ -178,6 +187,11 @@ class LoadStoreU : public Component {
   void displayDeviceType(int device_type_,
                          uint32_t indent);  // Added by Syed Gilani
 
+  FILE *f_core_ldst_u_shmem;
+  FILE *f_core_ldst_u_data_cache;
+  FILE *f_core_ldst_u_const_cache;
+  FILE *f_core_ldst_u_text_cache;
+  FILE *f_core_ldst_u_queue;
   ~LoadStoreU();
 };
 
@@ -222,6 +236,11 @@ class RegFU : public Component {
         const CoreDynParam &dyn_p_, double exClockRate, bool exist_ = true);
   void computeEnergy(bool is_tdp = true);
   void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
+
+  FILE *f_core_eu_rf_banks;
+  FILE *f_core_eu_rf_crossbar;
+  FILE *f_core_eu_rf_arbiter;
+
   ~RegFU();
 };
 
@@ -254,6 +273,9 @@ class EXECU : public Component {
         bool exist_);
   void computeEnergy(bool is_tdp = true);
   void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
+
+  FILE *f_core_eu_rf;
+  FILE *f_core_eu_inst_sch;
   ~EXECU();
 };
 
@@ -279,7 +301,8 @@ class Core : public Component {
   double Pipeline_energy;
   // full_decoder 	inst_decoder;
   // clock_network	clockNetwork;
-  Core(ParseXML *XML_interface, int ithCore_, InputParameter *interface_ip_);
+  Core(ParseXML *XML_interface, int ithCore_, InputParameter *interface_ip_,
+       unsigned long long *cycle, unsigned long long *tot_cycle);
   void set_core_param();
   void computeEnergy(bool is_tdp = true);
   void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
@@ -549,6 +572,19 @@ class Core : public Component {
   }
 
   void compute();
+  unsigned long long *proc_cycle;
+  unsigned long long *proc_tot_cycle;
+
+  void open_folders();
+  void reopen_folders(unsigned long long cycle);
+  void set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle);
+
+  bool power_prof_en;
+
+  FILE *f_core_inst_fu;
+  FILE *f_core_ldst_u;
+  FILE *f_core_eu;
+  FILE *f_core_idle;
   ~Core();
 };
 

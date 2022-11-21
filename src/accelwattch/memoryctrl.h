@@ -103,6 +103,14 @@ class MCFrontEnd : public Component {
              const MCParam &mcp_, enum MemoryCtrl_type mc_type_);
   void computeEnergy(bool is_tdp = true);
   void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
+
+  FILE *f_mc_front_end_engine;
+  FILE *f_mc_fee_rob;
+  FILE *f_mc_fee_read_buff;
+  FILE *f_mc_fee_write_buff;
+  FILE *f_mc_fee_prt;
+  FILE *f_mc_fee_thmask_coal_logic;
+
   ~MCFrontEnd();
 };
 
@@ -142,6 +150,20 @@ class MemoryController : public Component {
   void set_mc_param();
   void computeEnergy(bool is_tdp = true);
   void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
+
+  void set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle);
+  void open_folders();
+  void reopen_folders(unsigned long long cycle);
+
+  unsigned long long *proc_cycle;
+  unsigned long long *proc_tot_cycle;
+
+  bool power_prof_en;
+
+  FILE *f_mc_front_end_engine;
+  FILE *f_mc_transaction_engine;
+  FILE *f_mc_phy;
+
   ~MemoryController();
 };
 #endif /* MEMORYCTRL_H_ */

@@ -219,18 +219,24 @@ void memory_stats_t::memlatstat_read_done(mem_fetch *mf) {
   }
 }
 
-void memory_stats_t::memlatstat_dram_access(mem_fetch *mf) {
+void memory_stats_t::memlatstat_dram_access(mem_fetch *mf) 
+{
   unsigned dram_id = mf->get_tlx_addr().chip;
   unsigned bank = mf->get_tlx_addr().bk;
-  if (m_memory_config->gpgpu_memlatency_stat) {
-    if (mf->get_is_write()) {
-      if (mf->get_sid() < m_n_shader) {  // do not count L2_writebacks here
+  if (m_memory_config->gpgpu_memlatency_stat) 
+  {
+    if (mf->get_is_write()) 
+    {
+      if (mf->get_sid() < m_n_shader) 
+      {  // do not count L2_writebacks here
         bankwrites[mf->get_sid()][dram_id][bank]++;
         shader_mem_acc_log(mf->get_sid(), dram_id, bank, 'w');
       }
       totalbankwrites[dram_id][bank] +=
           ceil(mf->get_data_size() / m_memory_config->dram_atom_size);
-    } else {
+    } 
+    else 
+    {
       bankreads[mf->get_sid()][dram_id][bank]++;
       shader_mem_acc_log(mf->get_sid(), dram_id, bank, 'r');
       totalbankreads[dram_id][bank] +=
@@ -399,12 +405,16 @@ void memory_stats_t::memlatstat_print(unsigned n_mem, unsigned gpu_mem_n_bk) {
     min_bank_accesses = 0xFFFFFFFF;
     min_chip_accesses = 0xFFFFFFFF;
     printf("number of total read accesses:\n");
-    for (i = 0; i < n_mem; i++) {
+    for (i = 0; i < n_mem; i++) 
+    {
       printf("dram[%d]: ", i);
-      for (j = 0; j < gpu_mem_n_bk; j++) {
+      for (j = 0; j < gpu_mem_n_bk; j++) 
+      {
         l = totalbankreads[i][j];
-        if (l < min_bank_accesses) min_bank_accesses = l;
-        if (l > max_bank_accesses) max_bank_accesses = l;
+        if (l < min_bank_accesses) 
+          min_bank_accesses = l;
+        if (l > max_bank_accesses) 
+          max_bank_accesses = l;
         k += l;
         m += l;
         printf("%9d ", l);

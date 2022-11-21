@@ -77,7 +77,12 @@ enum pwr_cmp_t {
 };
 
 gpgpu_sim_wrapper::gpgpu_sim_wrapper(bool power_simulation_enabled,
-                                     char* xmlfile, int power_simulation_mode, bool dvfs_enabled) {
+                                     char* xmlfile, int power_simulation_mode, 
+                                     bool dvfs_enabled, unsigned long long *cycle,
+                                     unsigned long long *tot_cycle) {
+  m_cycle = cycle;
+  m_tot_cycle = tot_cycle;
+
   kernel_sample_count = 0;
   total_sample_count = 0;
 
@@ -123,7 +128,7 @@ gpgpu_sim_wrapper::gpgpu_sim_wrapper(bool power_simulation_enabled,
   if (g_power_simulation_enabled) {
     p->parse(xml_filename);
   }
-  proc = new Processor(p);
+  proc = new Processor(p, m_cycle, m_tot_cycle);
   power_trace_file = NULL;
   metric_trace_file = NULL;
   steady_state_tacking_file = NULL;
@@ -141,7 +146,9 @@ bool gpgpu_sim_wrapper::sanity_check(double a, double b) {
 
   return false;
 }
-void gpgpu_sim_wrapper::init_mcpat_hw_mode(unsigned gpu_sim_cycle) {
+
+void gpgpu_sim_wrapper::init_mcpat_hw_mode(unsigned gpu_sim_cycle) 
+{
    p->sys.total_cycles = gpu_sim_cycle; //total simulated cycles for current kernel
 }
 
@@ -152,7 +159,8 @@ void gpgpu_sim_wrapper::init_mcpat(
     bool power_per_cycle_dump, double steady_power_deviation,
     double steady_min_period, int zlevel, double init_val,
     int stat_sample_freq, int power_sim_mode, bool dvfs_enabled,
-    unsigned clock_freq, unsigned num_shaders) {
+    unsigned clock_freq, unsigned num_shaders) 
+{
   // Write File Headers for (-metrics trace, -power trace)
 
   reset_counters();
@@ -222,7 +230,8 @@ void gpgpu_sim_wrapper::init_mcpat(
     }
     if (g_steady_power_levels_enabled) {
       steady_state_tacking_file = gzopen(g_steady_state_tracking_filename, "w");
-      if ((steady_state_tacking_file == NULL)) {
+      if ((steady_state_tacking_file == NULL)) 
+      {
         printf("error - could not open trace files \n");
         exit(1);
       }
@@ -247,13 +256,17 @@ void gpgpu_sim_wrapper::init_mcpat(
   init_inst_val = init_val;  // gpu_tot_sim_insn+gpu_sim_insn;
 }
 
-void gpgpu_sim_wrapper::reset_counters() {
+void gpgpu_sim_wrapper::reset_counters() 
+{
   avg_max_min_counters<double> init;
-  for (unsigned i = 0; i < num_perf_counters; ++i) {
+  for (unsigned i = 0; i < num_perf_counters; ++i) 
+  {
     sample_perf_counters[i] = 0;
     kernel_cmp_perf_counters[i] = init;
   }
-  for (unsigned i = 0; i < num_pwr_cmps; ++i) {
+
+  for (unsigned i = 0; i < num_pwr_cmps; ++i) 
+  {
     sample_cmp_pwr[i] = 0;
     kernel_cmp_pwr[i] = init;
   }
@@ -1125,17 +1138,24 @@ void gpgpu_sim_wrapper::detect_print_steady_state(int position,
   }
 }
 
-void gpgpu_sim_wrapper::open_files() {
-  if (g_power_simulation_enabled) {
-    if (g_power_trace_enabled) {
+void gpgpu_sim_wrapper::open_files() 
+{
+  if (g_power_simulation_enabled) 
+  {
+    if (g_power_trace_enabled) 
+    {
       power_trace_file = gzopen(g_power_trace_filename, "a");
       metric_trace_file = gzopen(g_metric_trace_filename, "a");
     }
   }
 }
-void gpgpu_sim_wrapper::close_files() {
-  if (g_power_simulation_enabled) {
-    if (g_power_trace_enabled) {
+
+void gpgpu_sim_wrapper::close_files() 
+{
+  if (g_power_simulation_enabled) 
+  {
+    if (g_power_trace_enabled) 
+    {
       gzclose(power_trace_file);
       gzclose(metric_trace_file);
     }

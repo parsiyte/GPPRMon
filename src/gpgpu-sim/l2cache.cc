@@ -86,11 +86,11 @@ memory_partition_unit::memory_partition_unit(unsigned partition_id,
   m_sub_partition = new memory_sub_partition
       *[m_config->m_n_sub_partition_per_memory_channel];
   for (unsigned p = 0; p < m_config->m_n_sub_partition_per_memory_channel;
-       p++) {
+       p++) 
+  {
     unsigned sub_partition_id =
         m_id * m_config->m_n_sub_partition_per_memory_channel + p;
-    m_sub_partition[p] =
-        new memory_sub_partition(sub_partition_id, m_config, stats, gpu);
+    m_sub_partition[p] = new memory_sub_partition(sub_partition_id, m_config, stats, gpu);
   }
 }
 
@@ -526,7 +526,8 @@ void memory_sub_partition::cache_cycle(unsigned cycle) {
             m_L2cache->access(mf->get_addr(), mf,
                               m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle +
                                   m_memcpy_cycle_offset,
-                              events);
+                              events,
+                              false, true);
         bool write_sent = was_write_sent(events);
         bool read_sent = was_read_sent(events);
         MEM_SUBPART_DPRINTF("Probing L2 cache Address=%llx, status=%u\n",
