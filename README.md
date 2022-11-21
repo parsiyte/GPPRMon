@@ -58,5 +58,8 @@ During simulation, the simulator creates memory access information in the **runt
 4. In addition to accumulating options for each metric type, one can collect metrics separately for each sampling cycle interval.
 5. Collecting store memory access option is added to the simulator because write misses occur on both L1D and L2.
 
-The below figures explain the components: 
 
+
+#### TO DO:
+- Shared memory extension, non-coalesced extension.
+- Figures for each of two methods. 
