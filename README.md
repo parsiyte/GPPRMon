@@ -44,7 +44,7 @@ During simulation, the simulator creates memory access information in the **runt
  - [x] power_trace_zlevel : 0 ---- Compression level of the power trace output log (0=no comp, 9=highest)
  - [x] power_simulation_mode : 0 ---- Switch performance counter input for power simulation (0=Sim, 1=HW, 2=HW-Sim Hybrid)
 
-####**Example scenario: **
+#### Example scenario:
 1. mvt application from PolyBench benchmark suite is compiled with ```nvcc mvt.cu -o mvt -lcudart -arch=sm_75``` command and executed with ```./mvt > mvt.txt``` where **mvt.txt** will record normal performance outputs of the simulator. 
 2. Here, runtime metrics related to the memory access to the components and energy consumption will be recorded in the runtime_profiling_metrics folder.
 	
