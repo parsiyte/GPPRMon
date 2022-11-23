@@ -43,6 +43,7 @@ During simulation, the simulator creates memory access information in the **runt
  - [x] power_trace_enabled : 0 ---- produce a file for the power trace (1=On, 0=Off) 
  - [x] power_trace_zlevel : 0 ---- Compression level of the power trace output log (0=no comp, 9=highest)
  - [x] power_simulation_mode : 0 ---- Switch performance counter input for power simulation (0=Sim, 1=HW, 2=HW-Sim Hybrid)
+ - [x] gpgpu_runtime_stat : 100 ---- Sampling frequency (in terms of gpu sim cycle) (default = 100)
 
 #### Example scenario:
 1. mvt application from PolyBench benchmark suite is compiled with ```nvcc mvt.cu -o mvt -lcudart -arch=sm_75``` command and executed with ```./mvt > mvt.txt``` where **mvt.txt** will record normal performance outputs of the simulator. 
