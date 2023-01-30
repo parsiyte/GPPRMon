@@ -46,7 +46,7 @@ During simulation, the simulator creates memory access information in the **runt
  - [x] gpgpu_runtime_stat : 100 ---- Sampling frequency (in terms of gpu sim cycle) (default = 100)
 
 #### Example scenario:
-1. mvt application from PolyBench benchmark suite is compiled with ```nvcc mvt.cu -o mvt -lcudart -arch=sm_75``` command and executed with ```./mvt > mvt.txt``` where **mvt.txt** will record normal performance outputs of the simulator. 
+1. mvt application from PolyBench benchmark suite is compiled with ```nvcc mvt.cu -o mvt -lcudart -arch=sm_70``` command and executed with ```./mvt > mvt.txt``` where **mvt.txt** will record normal performance outputs of the simulator. 
 2. Here, runtime metrics related to the memory access to the components and energy consumption will be recorded in the runtime_profiling_metrics folder.
 	
 	2.1. Memory access metrics are collected via kernel basis such that there are separate memory accesses for each kernel because each kernel is called by the main function separately for our target applications.
@@ -57,6 +57,23 @@ During simulation, the simulator creates memory access information in the **runt
 3. Instead of using .txt files, the output format was converted to .csv files to easily manipulate those metrics as DataFrames in python.
 4. In addition to accumulating options for each metric type, one can collect metrics separately for each sampling cycle interval.
 5. Collecting store memory access option is added to the simulator because write misses occur on both L1D and L2.
+
+## Visualization of a kernel in runtime of simulation
+-------------------------------------------
+1. 
+![5500_5980](https://user-images.githubusercontent.com/73446582/215438622-621d34ba-7e9b-4c84-bac7-67d971745f5b.png)
+2. 
+![6000_6480](https://user-images.githubusercontent.com/73446582/215438628-9956b99f-9524-4ae8-9a96-58f6af588540.png)
+3.
+![6500_6980](https://user-images.githubusercontent.com/73446582/215438634-81faa265-52d8-4b24-829b-a5b0cab2258e.png)
+4.
+![7000_7480](https://user-images.githubusercontent.com/73446582/215438820-f6eb42fb-f8eb-4ecb-9a1a-d16423ac8130.png)
+5.
+![7500_7980](https://user-images.githubusercontent.com/73446582/215438644-2f60bbcd-f26d-409d-b0f3-e4bf1ab97c62.png)
+6.
+![8000_8480](https://user-images.githubusercontent.com/73446582/215438657-f0afc67e-8634-455c-a4fa-60074fdf76f5.png)
+7.
+![8500_8980](https://user-images.githubusercontent.com/73446582/215438664-291fe3a9-70f5-4c0c-b5fe-a09c3720a035.png)
 
 
 
