@@ -62,8 +62,14 @@ During simulation, the simulator creates memory access information in the **runt
 -------------------------------------------
 This is a visualizer tool that takes csv files obtained via run-time simulation of a GPU kernel, and generates corresponding memory access mapping onto a visualization for the corresponding architecture. In GPUs, there are L1D caches located onto SMs, lots of memory partitions which includes L2 caches and DRAM banks and NoCs which connects L2 and DRAMs to the SMs. For the configured architectures, the number of L1D cache is equal to SMs, the number of DRAM banks is equal to the number of memory partition and the number of L2 caches is equal to the number of memory partition * 2. 
 
+Here, we created architecture schemes for all of the ```SM2_GTX480, SM3_KEPLER_TITAN, SM6_TITANX, SM7_QV100, SM7_TITANV, SM75_RTX2060, SM75_RTX2060_S, SM86_RTX3070 ``` GPUs. 
 
-**GPGPU-Sim dependencies:** ```gcc, g++, make, makedepend, xutils, bison, flex, zlib ,CUDA Toolkit```
+The represented metrics for caches: 
+```  ```
+
+
+
+**GPGPU-Sim dependencies:** 
 
 
 1. (5500-6000)
