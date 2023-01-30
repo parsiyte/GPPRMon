@@ -1,3 +1,8 @@
+- [For the installation and build](##For-the-installation-and-build)
+- [About tracking runtime memory accesses](##About-tracking-runtime-memory-accesses)
+	- [Example scenario](####Example-scenario)
+- [Visualization of a kernel in runtime of simulation](##Visualization-of-a-kernel-in-runtime-of-simulation)
+
 ## For the installation and build
 ---------------------------------
 Detailed documentation on what GPGPU-Sim models are, how to configure it, and a
