@@ -64,12 +64,21 @@ This is a visualizer tool that takes csv files obtained via run-time simulation 
 
 Here, we created architecture schemes for all of the ```SM2_GTX480, SM3_KEPLER_TITAN, SM6_TITANX, SM7_QV100, SM7_TITANV, SM75_RTX2060, SM75_RTX2060_S, SM86_RTX3070 ``` GPUs. 
 
-The represented metrics for caches: 
-```  ```
+The represented metrics for caches: ``` hits, hit_reserved_status, misses, reservation_failures, sector_misses, and mshr_hits ```. Whenever an access created, the corresponding memory access looks for the closest cache. Cache is sectored such that if a line is 128 bytes, one sector for this cache line is 32 bytes.
 
+ - **Hits:** Data is found in the corresponding sector of the line.
+ - **Hit Reserved:** The line is allocated for the data, but the data does not arrive yet. Data will be located to the corresponding line and sector.
+ - **Misses:** Miss is used for a cache line eviction. Line eviction is determined with respect to a dirty counter. Replacement policy is determined via cache configuration.
+ - **Reservation Failures:** Whenever an access cannot find the data in the cache, it tries to create a miss request in MSHR buffer. When there is no slot to hold the corresponding miss in the buffer, it stalls the memory pipeline and the status for this situation is the reservation failures. 
+ - **Sector Misses:** When data is not found in the looked sector of the cache line, access status is the sector miss.
+ - **MSHR Hits:** When data is not found in the looked sector of the cache line, and miss request is already located in the MSHR buffer, it is recorded as MSHR hit.
 
-
-**GPGPU-Sim dependencies:** 
+To execute the runtime memory access visualizer for a kernel, you must enable memory collection metrics as above. Then, you can viusalize the runtime memory access as executing the following command. 
+```console
+user@simulator_path/runtime_visualizer$ python3 metric_manipulator.py sampling_cycle arch_name
+```
+ - **sampling_cycle** is the run-time visualization interval. 
+ - **arch_name** is the GPU name which may be ``` GTX480, TITAN, TITANX, RTX2060, RTX2060S, TITANV, QV100, RTX3070```
 
 
 1. (5500-6000)
