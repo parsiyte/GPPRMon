@@ -60,6 +60,12 @@ During simulation, the simulator creates memory access information in the **runt
 
 ## Visualization of a kernel in runtime of simulation
 -------------------------------------------
+This is a visualizer tool that takes csv files obtained via run-time simulation of a GPU kernel, and generates corresponding memory access mapping onto a visualization for the corresponding architecture. In GPUs, there are L1D caches located onto SMs, lots of memory partitions which includes L2 caches and DRAM banks and NoCs which connects L2 and DRAMs to the SMs. For the configured architectures, the number of L1D cache is equal to SMs, the number of DRAM banks is equal to the number of memory partition and the number of L2 caches is equal to the number of memory partition * 2. 
+
+
+**GPGPU-Sim dependencies:** ```gcc, g++, make, makedepend, xutils, bison, flex, zlib ,CUDA Toolkit```
+
+
 1. (5500-6000)
 ![5500_5980](https://user-images.githubusercontent.com/73446582/215438622-621d34ba-7e9b-4c84-bac7-67d971745f5b.png)
 2. (6000-6500)
