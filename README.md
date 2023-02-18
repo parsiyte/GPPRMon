@@ -1,7 +1,8 @@
 >[1. Prerequisites, Installing and Building of Simulator](##1.-Prerequisites,-Installing-and-Building-of-Simulator) <br />
 >>[To install simulator and prerequisites libraries](###To-install-simulator-and-prerequisites-libraries) <br /> 
 >>[To build](###To-build) <br /> 
->[About tracking runtime memory accesses](##About-tracking-runtime-memory-accesses) <br />
+
+>[2. Tracking Runtime Memory Access on L1D, L2 and DRAM](##2.-Tracking-Runtime-Memory-Access-on-L1D,-L2-and-DRAM) <br />
 >	[Example scenario](####Example-scenario) <br />
 >[Visualization of a kernel in runtime of simulation](##Visualization-of-a-kernel-in-runtime-of-simulation) <br />
 
@@ -27,7 +28,7 @@ Then,
 
 Also if you want to generate documentations files whose dependency files are specified as optional, you must first install the dependencies. Afterwards, you can obtain the docs with `../gpgpu_sim$ make docs` and delete them with `../gpgpu_sim$ make cleandocs` commands. These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
 
-## About tracking runtime memory accesses
+## 2. Tracking Runtime Memory Access on L1D, L2 and DRAM
 -------------------------------------------
 During simulation, the simulator creates memory access information in the **runtime_profiling_metrics/memory_accesses** folder. 
  - [x] mem_profiler : 1 ---- memory access runtime profiling (0 = not enabled)
