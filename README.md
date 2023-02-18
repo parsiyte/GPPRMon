@@ -1,4 +1,18 @@
+# color [![](https://github.com/fatih/color/workflows/build/badge.svg)](https://github.com/fatih/color/actions) [![PkgGoDev](https://pkg.go.dev/badge/github.com/fatih/color)](https://pkg.go.dev/github.com/fatih/color)
 
+
+```go
+// Print with default helper functions
+color.Cyan("Prints text in cyan.")
+
+// A newline will be appended automatically
+color.Blue("Prints %s in blue.", "text")
+
+// These are using the default foreground colors
+color.Red("We have red")
+color.Magenta("And many others ..")
+
+```
 [1 - Install and build simulator](##1 - Prerequisites, Installing and Building of Simulator) <br />
 [About tracking runtime memory accesses](##About-tracking-runtime-memory-accesses) <br />
 	[Example scenario](####Example-scenario) <br />
@@ -20,10 +34,6 @@ After installing prerequisite libraries including the simulator, clone the accel
 > For debugging, build_type -> `debug` <br>
 > For normal release -> you don't need to specify build_type, blank as empty. <br>
 
-![f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `f03c15`
-
-
-This is a test to see how the colors work.
 Then, 
 `**../gpgpu_sim**$make` command builds the simulator compiling and creating executables. <br>
 `**../gpgpu_sim**$make clean` command cleans the executables of the simulator. <br>
