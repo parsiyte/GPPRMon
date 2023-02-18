@@ -16,9 +16,23 @@ After installing prerequisite libraries including the simulator, clone the accel
 
 ### To build 
 
+```json
+   // code for coloring
+```
+```html
+   // code for coloring
+```
+```js
+   // code for coloring
+```
+```css
+   // code for coloring
+```
+// etc.
+
 ```diff
- ../gpgpu_sim
- $source setup_environment <build_type>
+- ../gpgpu_sim
++ $source setup_environment <build_type>
 ```
 sets the environment accordingly to build the simulator correctly.
 
