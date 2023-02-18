@@ -1,17 +1,3 @@
-
-
-```go
-// Print with default helper functions
-color.Cyan("Prints text in cyan.")
-
-// A newline will be appended automatically
-color.Blue("Prints %s in blue.", "text")
-
-// These are using the default foreground colors
-color.Red("We have red")
-color.Magenta("And many others ..")
-
-```
 [1 - Install and build simulator](##1 - Prerequisites, Installing and Building of Simulator) <br />
 [About tracking runtime memory accesses](##About-tracking-runtime-memory-accesses) <br />
 	[Example scenario](####Example-scenario) <br />
@@ -29,7 +15,9 @@ Detailed documentation on what GPGPU-Sim models are, how to configure it, and a 
 After installing prerequisite libraries including the simulator, clone the accelWattch implementation of the simulator (GPGPU-Sim 4.2). Then, you should follow the below commands inside the simulator directory to build the simulator.
 
 ### To build 
-![#f03c15](https://placehold.co/15x15/f03c15/f03c15.png) `../gpgpu_sim``$source setup_environment <build_type>` sets the environment accordingly to build the simulator correctly.
+```diff
+../gpgpu_sim
+``` `$source setup_environment <build_type>` sets the environment accordingly to build the simulator correctly.
 > For debugging, build_type -> `debug` <br>
 > For normal release -> you don't need to specify build_type, blank as empty. <br>
 
