@@ -28,8 +28,20 @@ Then,
 Also if you want to generate documentations files whose dependency files are specified as optional, you must first install the dependencies. Afterwards, you can obtain the docs with `../gpgpu_sim$ make docs` and delete them with `../gpgpu_sim$ make cleandocs` commands. These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
 
 ## 2. Tracking Runtime Memory Access on L1D, L2 and DRAM
--------------------------------------------
-During simulation, the simulator creates memory access information in the **runtime_profiling_metrics/memory_accesses** folder. 
+During the simulation, the simulator creates memory access information in the `gpgpu_sim/runtime_profiling_metrics/memory_accesses` folder. To enable memory access metric collection, one needs to specify the below flags in the **gpgpusim.config** file.
+
+| Flags | Descriptions | Default value |
+| — — — | — — — — — — —| — — — — — — — —|
+| -mem_profiler | Enables collecting memory access metrics | 0 = not enabled |
+| -mem_runtime_stat | Sampling frequency for the metric collection | 100 = sample for each 100 GPU cycles |
+| -IPC_per_prof_interval | Record IPC rates for each metric collection sample | 0 = do not collect | 
+| -instruction_monitor | Record issue/completetion stats of the instructions | 0 = do not collect |
+| -L1D_metrics | Enable collecting metrics for L1D cache accesses | 0 = do not collect |
+| -L2_metrics | Enable collecting metrics for L2 cache accesses | 0 = do not collect |
+| -DRAM_metrics | Enable collecting metrics for DRAM accesses | 0 = do not collect |
+| -store_enable | Enable collecting metrics for both store and load instructions | 0 = just record metrics for load |
+| -accumulate_stats | Accumulate collected metrics | 0 = not accumulate | 
+
  - [x] mem_profiler : 1 ---- memory access runtime profiling (0 = not enabled)
  - [x] mem_runtime_stat :100 ---- mem_runtime_stat collection frequency
  - [x] L1D_metrics : 1 ---- memory access runtime profiling for L1 data cache (0 = not enabled)
