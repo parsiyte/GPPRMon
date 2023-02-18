@@ -1,13 +1,12 @@
 >[1. Prerequisites, Installing and Building of Simulator](##1.-Prerequisites,-Installing-and-Building-of-Simulator) <br />
 >>[To install simulator and prerequisites libraries](###To-install-simulator-and-prerequisites-libraries) <br /> 
 >>[To build](###To-build) <br /> 
-
+>
 >[2. Tracking Runtime Memory Access on L1D, L2 and DRAM](##2.-Tracking-Runtime-Memory-Access-on-L1D,-L2-and-DRAM) <br />
 >	[Example scenario](####Example-scenario) <br />
 >[Visualization of a kernel in runtime of simulation](##Visualization-of-a-kernel-in-runtime-of-simulation) <br />
 
 ## 1. Prerequisites, Installing and Building of Simulator
----------------------------------
 Detailed documentation on what GPGPU-Sim models are, how to configure it, and a guide to the source code can be found here: <http://gpgpu-sim.org/manual/>. Also a detailed documentation on AccelWattch, including how to configure it and a guide to the source code, can be found here: <https://accel-sim.github.io/accelwattch.html>.
 
 ### To install simulator and prerequisites libraries
