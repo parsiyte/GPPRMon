@@ -19,6 +19,7 @@ After installing prerequisite libraries including the simulator, clone the accel
 `**../gpgpu_sim**$source setup_environment <build_type>` sets the environment accordingly to build the simulator correctly.
 > For debugging, build_type -> `debug` <br>
 > For normal release -> you don't need to specify build_type, blank as empty. <br>
+
 Then, 
 `**../gpgpu_sim**$make` command builds the simulator compiling and creating executables. <br>
 `**../gpgpu_sim**$make clean` command cleans the executables of the simulator. <br>
