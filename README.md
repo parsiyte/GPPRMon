@@ -1,4 +1,4 @@
-[1 - Install and build simulator](##1 - Prerequisites, Installing and Building of Simulator) <br />
+[1 - Prerequisites, Installing and Building of Simulator](##1 - Prerequisites, Installing and Building of Simulator) <br />
 [About tracking runtime memory accesses](##About-tracking-runtime-memory-accesses) <br />
 	[Example scenario](####Example-scenario) <br />
 [Visualization of a kernel in runtime of simulation](##Visualization-of-a-kernel-in-runtime-of-simulation) <br />
