@@ -22,7 +22,7 @@ After installing prerequisite libraries including the simulator, clone the accel
 Then, 
 `../gpgpu_sim$ make` command builds the simulator compiling and creating executables. Furthermore, `../gpgpu_sim$ make clean` command cleans the executables of the simulator. <br>
 
-Also if you want to generate documentations files whose dependency files are specified as optional, you must first install the dependencies. Afterwards, you can obtain the docs with `**../gpgpu_sim**$make docs` and delete them with `**../gpgpu_sim**$make cleandocs` commands. These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
+Also if you want to generate documentations files whose dependency files are specified as optional, you must first install the dependencies. Afterwards, you can obtain the docs with `../gpgpu_sim$ make docs` and delete them with `../gpgpu_sim$make cleandocs` commands. These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
 
 ## About tracking runtime memory accesses
 -------------------------------------------
