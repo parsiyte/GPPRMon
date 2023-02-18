@@ -53,8 +53,11 @@ During simulation, the simulator creates memory access information in the **runt
 >>> Instruction Functional Unit (Instruction Cache, Branch Target Buffer, Decoder, Branch Predictor etc.)
 >>
 >> Network on Chip 
+>> 
 >> L2 Cache
+>> 
 >> DRAM + Memory Controller
+>> 
 >>> Frontend Engine
 >>> PHY Between Memory Controller and DRAM
 >>> Transaction Engine (BackEnd Engine)
