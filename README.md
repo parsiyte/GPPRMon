@@ -15,7 +15,7 @@ Detailed documentation on what GPGPU-Sim models are, how to configure it, and a 
 After installing prerequisite libraries including the simulator, clone the accelWattch implementation of the simulator (GPGPU-Sim 4.2). Then, you should follow the below commands inside the simulator directory to build the simulator.
 
 ### To build 
-`$${\color{green} **../gpgpu\_sim** \space \color{black}$source \space\space setup_environment \space\space <build_type>}$$`
+`$${\color{green} **../gpgpu\_sim** \space \color{black}$source \space\space setup\_environment \space\space build_type}$$`
 
 
 sets the environment accordingly to build the simulator correctly.
