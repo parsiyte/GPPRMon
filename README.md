@@ -3,6 +3,7 @@
 >>[To build](###To-build) <br /> 
 >
 >[2. Tracking Runtime Memory Access on L1D, L2 and DRAM](##2.-Tracking-Runtime-Memory-Access-on-L1D,-L2-and-DRAM) <br />
+>[3. Tracking Runtime Power Consumption of GPU and Sub-components](##3.-Tracking-Runtime-Power-Consumption-of-GPU-and-Sub-components) <br />
 >	[Example scenario](####Example-scenario) <br />
 >[Visualization of a kernel in runtime of simulation](##Visualization-of-a-kernel-in-runtime-of-simulation) <br />
 
@@ -31,7 +32,7 @@ Also if you want to generate documentations files whose dependency files are spe
 During the simulation, the simulator creates memory access information in the `gpgpu_sim/runtime_profiling_metrics/memory_accesses` folder. To enable memory access metric collection, one needs to specify the below flags in the **gpgpusim.config** file.
 
 | Flags | Descriptions | Default value |
-| — — — | — — — — — — —| — — — — — — — —|
+|:------|:-------------|:--------------|
 | -mem_profiler | Enables collecting memory access metrics | 0 = not enabled |
 | -mem_runtime_stat | Sampling frequency for the metric collection | 100 = sample for each 100 GPU cycles |
 | -IPC_per_prof_interval | Record IPC rates for each metric collection sample | 0 = do not collect | 
@@ -42,18 +43,22 @@ During the simulation, the simulator creates memory access information in the `g
 | -store_enable | Enable collecting metrics for both store and load instructions | 0 = just record metrics for load |
 | -accumulate_stats | Accumulate collected metrics | 0 = not accumulate | 
 
- - [x] mem_profiler : 1 ---- memory access runtime profiling (0 = not enabled)
- - [x] mem_runtime_stat :100 ---- mem_runtime_stat collection frequency
- - [x] L1D_metrics : 1 ---- memory access runtime profiling for L1 data cache (0 = not enabled)
- - [x] L2_metrics : 1 ---- memory access runtime profiling for L2 cache (0 = not enabled)
- - [x] DRAM_metrics : 1 ---- memory access runtime profiling for DRAM (0 = not enabled)
- - [x] store_enable : 1 ---- To collect statistics for the store instructions (write operations onto L1D, L2 caches, and DRAM) in addition to loads. (0 = for just loads)
- - [x] accumulate_stats : 1 ---- To accumulate statistics. If not enabled, each statistic will reveal just the corresponding interval statistics.
-
-## About tracking runtime energy consumption of components
--------------------------------------------
+## 3. Tracking Runtime Power Consumption of GPU and Sub-components
 During simulation, the simulator creates memory access information in the **runtime_profiling_metrics/energy_consumption** folder. 
- - [x] power_simulation_enabled : 1 ---- Turn on power simulator (1=On, 0=Off).
+
+| Flags | Descriptions | Default value |
+|:------|:-------------|:--------------|
+| -mem_profiler | Enables collecting memory access metrics | 0 = not enabled |
+| -mem_runtime_stat | Sampling frequency for the metric collection | 100 = sample for each 100 GPU cycles |
+| -IPC_per_prof_interval | Record IPC rates for each metric collection sample | 0 = do not collect | 
+| -instruction_monitor | Record issue/completetion stats of the instructions | 0 = do not collect |
+| -L1D_metrics | Enable collecting metrics for L1D cache accesses | 0 = do not collect |
+| -L2_metrics | Enable collecting metrics for L2 cache accesses | 0 = do not collect |
+| -DRAM_metrics | Enable collecting metrics for DRAM accesses | 0 = do not collect |
+| -store_enable | Enable collecting metrics for both store and load instructions | 0 = just record metrics for load |
+| -accumulate_stats | Accumulate collected metrics | 0 = not accumulate | 
+
+- [x] power_simulation_enabled : 1 ---- Turn on power simulator (1=On, 0=Off).
  - [x] power_per_cycle_dump : 1 ---- Dump detailed power output each cycle
  - [x] dvfs_enabled : 1 ---- Turn on DVFS for power model.
  - [x] aggregate_power_stats : 1 ---- Accumulate power across all kernels
