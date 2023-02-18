@@ -1,10 +1,10 @@
 
-[1 - Install and build simulator](##For-the-installation-and-build) <br />
+[1 - Install and build simulator](##1 - Prerequisites, Installing and Building of Simulator) <br />
 [About tracking runtime memory accesses](##About-tracking-runtime-memory-accesses) <br />
 	[Example scenario](####Example-scenario) <br />
 [Visualization of a kernel in runtime of simulation](##Visualization-of-a-kernel-in-runtime-of-simulation) <br />
 
-## 1 - Prerequisite, Installing and Building of Simulator
+## 1 - Prerequisites, Installing and Building of Simulator
 ---------------------------------
 Detailed documentation on what GPGPU-Sim models are, how to configure it, and a guide to the source code can be found here: <http://gpgpu-sim.org/manual/>. Also a detailed documentation on AccelWattch, including how to configure it and a guide to the source code, can be found here: <https://accel-sim.github.io/accelwattch.html>.
 ### To install 
@@ -16,11 +16,14 @@ Detailed documentation on what GPGPU-Sim models are, how to configure it, and a 
 After installing prerequisite libraries including the simulator, clone the accelWattch implementation of the simulator (GPGPU-Sim 4.2). Then, you should follow the below commands inside the simulator directory to build the simulator.
 
 ### To build 
-`../gpgpu_sim$source setup_environment <build_type>` sets the environment accordingly to build the simulator correctly.
-> For debugging, build_type -> `debug`
-> For normal release -> you don't need to specify build_type, blank as empty.
+`**../gpgpu_sim**$source setup_environment <build_type>` sets the environment accordingly to build the simulator correctly.
+> For debugging, build_type -> `debug` <br>
+> For normal release -> you don't need to specify build_type, blank as empty. <br>
+Then, 
+`**../gpgpu_sim**$make` command builds the simulator compiling and creating executables. <br>
+`**../gpgpu_sim**$make clean` command cleans the executables of the simulator. <br>
 
-To build the simulator ```user$ make```, clean executables of the simulator ```user$ make clean```, build the Doxygen generated documentation ```user$ make docs```, clean the docs ```user$ make cleandocs```. This doxygen-generated documentation will help you to understand classes, templates, functions, etc.
+Also if you want to generate documentations files whose dependency files are specified as optional, you must first install the dependencies. Afterwards, you can obtain the docs with `**../gpgpu_sim**$make docs` and delete them with `**../gpgpu_sim**$make cleandocs` commands. These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
 
 ## About tracking runtime memory accesses
 -------------------------------------------
