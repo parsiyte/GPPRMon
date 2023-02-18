@@ -17,9 +17,10 @@ After installing prerequisite libraries including the simulator, clone the accel
 ### To build 
 
 ```diff
-- ../gpgpu_sim
+../gpgpu_sim
+$source setup_environment <build_type>
 ```
-`$source setup_environment <build_type>` sets the environment accordingly to build the simulator correctly.
+sets the environment accordingly to build the simulator correctly.
 
 
 > For debugging, build_type -> `debug` <br>
