@@ -1,15 +1,12 @@
+
 [For the installation and build](##For-the-installation-and-build) <br />
 [About tracking runtime memory accesses](##About-tracking-runtime-memory-accesses) <br />
 	[Example scenario](####Example-scenario) <br />
 [Visualization of a kernel in runtime of simulation](##Visualization-of-a-kernel-in-runtime-of-simulation) <br />
 
-## For the installation and build
+## 1 - Prerequisite, Installation and Building of Simulator
 ---------------------------------
-Detailed documentation on what GPGPU-Sim models are, how to configure it, and a
-guide to the source code can be found here: <http://gpgpu-sim.org/manual/>.
-Instructions for building Doxygen source code documentation are included below.
-Detailed documentation on GPUWattch, including how to configure it and a guide
-to the source code, can be found here: <http://gpgpu-sim.org/gpuwattch/>.
+Detailed documentation on what GPGPU-Sim models are, how to configure it, and a guide to the source code can be found here: <http://gpgpu-sim.org/manual/>. Also a detailed documentation on AccelWattch, including how to configure it and a guide to the source code, can be found here: <https://accel-sim.github.io/accelwattch.html>.
 
 **GPGPU-Sim dependencies:** ```gcc, g++, make, makedepend, xutils, bison, flex, zlib ,CUDA Toolkit```
 
