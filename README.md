@@ -46,22 +46,19 @@ During the simulation, the simulator creates memory access information in the `g
 ## 3. Tracking Runtime Power Consumption of GPU and Sub-components
 During simulation, the simulator creates memory access information in the **runtime_profiling_metrics/energy_consumption** folder. For each kernel, simulator will create seperate folders and power profiling metrics at runtime. For now, the below power consumption metrics is provided, but these metrics may be enhanced further to investigate sub-units in an independent manner.
 
-> GPU  
->> Core 
->>> Execution Unit (Register FU, Schedulers, Functional Units etc.)
->>> Load Store Unit (Crossbar, Shared Memory, Shared Mem Miss/Fill Buffer, Cache, Cache Prefetch Buffer, Cache WriteBack Buffer, Cache Miss Buffer etc.)
->>> Instruction Functional Unit (Instruction Cache, Branch Target Buffer, Decoder, Branch Predictor etc.)
+> **GPU**  
+>> **Core**
+>>> **Execution Unit** (Register FU, Schedulers, Functional Units etc.) <br>
+>>> **Load Store Unit** (Crossbar, Shared Memory, Shared Mem Miss/Fill Buffer, Cache, Cache Prefetch Buffer, Cache WriteBack Buffer, Cache Miss Buffer etc.) <br>
+>>> **Instruction Functional Unit** (Instruction Cache, Branch Target Buffer, Decoder, Branch Predictor etc.) <br>
 >>
->> Network on Chip 
->> 
->> L2 Cache
->> 
->> DRAM + Memory Controller
->> 
->>> Frontend Engine
->>> PHY Between Memory Controller and DRAM
->>> Transaction Engine (BackEnd Engine)
->>> DRAM
+>> **Network on Chip** <br>
+>> **L2 Cache** <br>
+>> **DRAM + Memory Controller** <br>
+>>> **Frontend Engine** <br>
+>>> **PHY Between Memory Controller and DRAM** <br>
+>>> **Transaction Engine** (BackEnd Engine) <br>
+>>> **DRAM** <br>
 
 | Flags | Descriptions | Default value |
 |:------|:-------------|:--------------|
