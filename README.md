@@ -20,8 +20,7 @@ After installing prerequisite libraries including the simulator, clone the accel
 > For debugging, build_type -> `debug` <br>
 > For normal release -> you don't need to specify build_type, blank as empty. <br>
 
-<h1 style="color:purple;">Hello World</h1>
-
+$${\color{blue}Blue}$$	
 
 Then, 
 `**../gpgpu_sim**$make` command builds the simulator compiling and creating executables. <br>
