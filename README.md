@@ -9,8 +9,8 @@
 Detailed documentation on what GPGPU-Sim models are, how to configure it, and a guide to the source code can be found here: <http://gpgpu-sim.org/manual/>. Also a detailed documentation on AccelWattch, including how to configure it and a guide to the source code, can be found here: <https://accel-sim.github.io/accelwattch.html>.
 
 > **GPGPU-Sim dependencies:** ```gcc, g++, make, makedepend, xutils, bison, flex, zlib ,CUDA Toolkit``` <br>
-> **GPGPU-Sim documentation dependencies:** ```doxygen, graphvi``` <br>
-> **AerialVision dependencies:** ```python-pmw, python-ply, python-numpy, libpng12-dev, python-matplotlib``` <br>
+> (optional) **GPGPU-Sim documentation dependencies:** ```doxygen, graphvi``` <br>
+> (optional) **AerialVision dependencies:** ```python-pmw, python-ply, python-numpy, libpng12-dev, python-matplotlib``` <br>
 
 **CUDA SDK dependencies:** ```install libxi-dev libxmu-dev libglut3-dev```
 
