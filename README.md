@@ -15,18 +15,13 @@ Detailed documentation on what GPGPU-Sim models are, how to configure it, and a 
 After installing prerequisite libraries including the simulator, clone the accelWattch implementation of the simulator (GPGPU-Sim 4.2). Then, you should follow the below commands inside the simulator directory to build the simulator.
 
 ### To build 
-`$${\color{green} **../gpgpu\_sim** \space \color{black}$source \space\space setup\_environment \space\space build_type}$$`
-
-
-sets the environment accordingly to build the simulator correctly.
-
-
+`../gpgpu_sim$source setup_environment <build_type>` sets the environment accordingly to build the simulator correctly.
 > For debugging, build_type -> `debug` <br>
 > For normal release -> you don't need to specify build_type, blank as empty. <br>
 
 Then, 
-`**../gpgpu_sim**$make` command builds the simulator compiling and creating executables. <br>
-`**../gpgpu_sim**$make clean` command cleans the executables of the simulator. <br>
+`../gpgpu_sim$make` command builds the simulator compiling and creating executables. <br>
+`../gpgpu_sim$make clean` command cleans the executables of the simulator. <br>
 
 Also if you want to generate documentations files whose dependency files are specified as optional, you must first install the dependencies. Afterwards, you can obtain the docs with `**../gpgpu_sim**$make docs` and delete them with `**../gpgpu_sim**$make cleandocs` commands. These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
 
