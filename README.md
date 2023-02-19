@@ -22,10 +22,10 @@ user@gpgpu_sim:~$ source setup_environment <build_type>
 # That command sets the environment variables such that simulator can find related executables in the linkage path.
 # If you want to debug the simulator (as it was written in C/C++), you should specify build_type as `debug`.
 # Otherwise, you do not need to specify it, blank as empty. It will automatically build the executables with `release` version.
+**Then, **
+
 ```
 
-
-Then, 
 ```console
 user@gpgpu_sim:~$ make
 ``` 
