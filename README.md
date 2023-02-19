@@ -34,9 +34,8 @@ user@gpgpu_sim:~$ make cleandocs  	# Deletes pre-generated doxygen files if they
 ``` 
 The generated documentation with doxygen eases understanding classes, templates, functions, etc., for the simulator.
 
-
 ## 2. Tracking Runtime Memory Access on L1D, L2 and DRAM
-During the simulation, the simulator creates memory access information in below path.  
+During the simulation, the simulator creates memory access information in the below path.  
 ```console
 user@gpgpu_sim/runtime_profiling_metrics/memory_accesses:~$
 ``` 
@@ -55,7 +54,7 @@ To enable memory access metric collection, one needs to specify the below flags 
 | -accumulate_stats | Accumulate collected metrics | 0 = not accumulate | 
 
 ## 3. Tracking Runtime Power Consumption of GPU and Sub-components
-During simulation, the simulator records power consumption metrics in below path.
+During simulation, the simulator records power consumption metrics in the below path.
 ```console
 user@gpgpu_sim/runtime_profiling_metrics/energy_consumption:~$
 ```
