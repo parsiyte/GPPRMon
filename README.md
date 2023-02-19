@@ -107,17 +107,17 @@ In addition, one may see the L1D cache usage and consumed runtime power measurem
  
 ![KID=0_memStatsForInterval=51000_51500](https://user-images.githubusercontent.com/73446582/219937330-5a3c4ed6-124a-44cb-95ff-5cd60c78a6c1.png)
 
-The second visualization shows the accesses on L1D, L2 caches (as ``` hits, hit_reserved_status, misses, reservation_failures, sector_misses, and mshr_hits ```) and DRAM partitions (as ```row buffer hits and row buffer misses```) within the simulator interval. For caches, access descriptions are as following:
+The second visualization shows the accesses on L1D, L2 caches (as ``` hits, hit_reserved_status, misses, reservation_failures, sector_misses, and mshr_hits ```) and DRAM partitions (as ```row buffer hits and row buffer misses```) within the simulator interval. For caches, access descriptions are as follow:
  - **Hits:** Data is found in the corresponding sector of the line.
  - **Hit Reserved:** The line is allocated for the data, but the data does not arrive yet. Data will be located to the corresponding line and sector.
- - **Misses:** Miss is used for a cache line eviction. Line eviction is determined with respect to a dirty counter. Replacement policy is determined via cache configuration.
- - **Reservation Failures:** Whenever an access cannot find the data in the cache, it tries to create a miss request in MSHR buffer. When there is no slot to hold the corresponding miss in the buffer, it stalls the memory pipeline and the status for this situation is the reservation failures. 
+ - **Misses:** Miss is used for a cache line eviction. Line eviction is determined with a dirty counter. Replacement policy is determined via cache configuration.
+ - **Reservation Failures:** Whenever an access cannot find the data in the cache, it tries to create a miss request in the MSHR buffer. When there is no slot to hold the corresponding miss in the buffer, it stalls the memory pipeline, and the status for this situation is a reservation failure. 
  - **Sector Misses:** When data is not found in the looked sector of the cache line, access status is the sector miss.
- - **MSHR Hits:** When data is not found in the looked sector of the cache line, and miss request is already located in the MSHR buffer, it is recorded as MSHR hit. <br>
+ - **MSHR Hits:** When data is not found in the looked sector of the cache line, and the miss request is already located in the MSHR buffer, it is recorded as MSHR hit. <br>
 
-For DRAM, access descriptions are as following:
- - **Row Buffer Hits:** Data is found in the corresponding sector of the line.
- - **Row Buffer Misses:** The line is allocated for the data, but the data does not arrive yet. Data will be located to the corresponding line and sector.
+For DRAM, access descriptions are as follows:
+ - **Row Buffer Hits:** The data looked for by the current instruction exists in the DRAM row buffer which holds the element of the last access.
+ - **Row Buffer Misses:** The data looked for by the current instruction does not exist in the row buffer.
 
 3) GPU Throughput and Power Consumption <br>
 GPUs mainly consist of SMs ,which holds functional units, register files and caches, NoCs and memory partitions in which there are DRAM banks and L2 caches. For the configured architectures, the number of L1D cache is equal to SMs (SIMT Core Clusters), the number of DRAM banks is equal to the number of memory partition and the number of L2 caches is equal to the number of memory partition * 2. <br>
