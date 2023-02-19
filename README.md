@@ -20,15 +20,28 @@ After installing prerequisite libraries including the simulator, clone the accel
 
 ### To build 
 ```console
-../gpgpu_sim$ source setup_environment <build_type>
+user@gpgpu_sim:~$ source setup_environment <build_type>
+```
+
 sets the environment accordingly to build the simulator correctly.
 > For debugging, build_type -> `debug` <br>
 > For normal release -> you don't need to specify build_type, blank as empty. <br>
 
 Then, 
-`../gpgpu_sim$ make` command builds the simulator compiling and creating executables. Furthermore, `../gpgpu_sim$ make clean` command cleans the executables of the simulator. <br>
+```console
+user@gpgpu_sim:~$ make
+``` command builds the simulator compiling and creating executables. Furthermore, 
+```console
+user@gpgpu_sim:~$ make clean
+``` command cleans the executables of the simulator. <br>
 
-Also if you want to generate documentations files whose dependency files are specified as optional, you must first install the dependencies. Afterwards, you can obtain the docs with `../gpgpu_sim$ make docs` and delete them with `../gpgpu_sim$ make cleandocs` commands. These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
+Also if you want to generate documentations files whose dependency files are specified as optional, you must first install the dependencies. Afterwards, you can obtain the docs with 
+```console
+user@gpgpu_sim:~$ make docs
+``` and delete them with 
+```console
+user@gpgpu_sim:~$ make cleandocs
+``` commands. These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
 
 ## 2. Tracking Runtime Memory Access on L1D, L2 and DRAM
 During the simulation, the simulator creates memory access information in the `gpgpu_sim/runtime_profiling_metrics/memory_accesses` folder. To enable memory access metric collection, one needs to specify the below flags in the **gpgpusim.config** file.
