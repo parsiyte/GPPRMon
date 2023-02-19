@@ -19,7 +19,9 @@ Detailed documentation on what GPGPU-Sim models are, how to configure it, and a 
 After installing prerequisite libraries including the simulator, clone the accelWattch implementation of the simulator (GPGPU-Sim 4.2). Then, you should follow the below commands inside the simulator directory to build the simulator.
 
 ### To build 
-`../gpgpu_sim$ source setup_environment <build_type>` sets the environment accordingly to build the simulator correctly.
+```console
+../gpgpu_sim$ source setup_environment <build_type>
+sets the environment accordingly to build the simulator correctly.
 > For debugging, build_type -> `debug` <br>
 > For normal release -> you don't need to specify build_type, blank as empty. <br>
 
@@ -108,9 +110,6 @@ Here, we created architecture schemes for all of the ```SM2_GTX480, SM3_KEPLER_T
 The represented metrics for caches: ``` hits, hit_reserved_status, misses, reservation_failures, sector_misses, and mshr_hits ```. Whenever an access created, the corresponding memory access looks for the closest cache. Cache is sectored such that if a line is 128 bytes, one sector for this cache line is 32 bytes.
 
 To execute the runtime memory access visualizer for a kernel, you must enable memory collection metrics as above. Then, you can viusalize the runtime memory access as executing the following command. 
-```console
-user@simulator_path/runtime_visualizer$ python3 metric_manipulator.py sampling_cycle arch_name
-```
 
 
 
