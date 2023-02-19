@@ -46,7 +46,7 @@ To enable memory access metric collection, one needs to specify the below flags 
 | -mem_profiler | Enables collecting memory access metrics | 0 = not enabled |
 | -mem_runtime_stat | Sampling frequency for the metric collection | 100 = sample for each 100 GPU cycles |
 | -IPC_per_prof_interval | Record IPC rates for each metric collection sample | 0 = do not collect | 
-| -instruction_monitor | Record issue/completetion stats of the instructions | 0 = do not collect |
+| -instruction_monitor | Record issue/completion stats of the instructions | 0 = do not collect |
 | -L1D_metrics | Enable collecting metrics for L1D cache accesses | 0 = do not collect |
 | -L2_metrics | Enable collecting metrics for L2 cache accesses | 0 = do not collect |
 | -DRAM_metrics | Enable collecting metrics for DRAM accesses | 0 = do not collect |
