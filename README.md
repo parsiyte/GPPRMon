@@ -6,7 +6,7 @@
 4. [Visualizing Power Consumption, Memory Accesses, and Streaming Multiprocessor Metrics](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#4-visualizing-power-consumption-memory-access-and-core-metrics) <br />
 
 ## 1. Prerequisites, Installing and Building the GPGPU-Sim v4.2
-Detailed documentation on what GPGPU-Sim models are, how to configure it, and a guide to the source code can be found here: <http://gpgpu-sim.org/manual/>. Also a detailed documentation on AccelWattch, including how to configure it and a guide to the source code, can be found here: <https://accel-sim.github.io/accelwattch.html>.
+Detailed documentation on GPGPU-Sim, what GPU models and architectures exist, how to configure it, and a guide to the source code can be found [here](http://gpgpu-sim.org/manual/). Also, detailed documentation on AccelWattch to collect power consumption metrics for subcomponents and a guide to the source code can be found [here](https://accel-sim.github.io/accelwattch.html).
 
 ### Installing prerequisite libraries and simulator
 > **GPGPU-Sim dependencies:** ```gcc, g++, make, makedepend, xutils, bison, flex, zlib ,CUDA Toolkit``` <br>
