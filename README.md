@@ -1,9 +1,9 @@
 1. [Prerequisites, Installing and Building of Simulator](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#1-prerequisites-installing-and-building-of-simulator)  <br > 
    1.1. [To install simulator and prerequisites libraries](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#to-install-simulator-and-prerequisites-libraries) <br > 
    1.2. [To build](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#to-build) <br > 
-2. [Tracking Runtime Memory Access on L1D, L2 and DRAM](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#2-tracking-runtime-memory-access-on-l1d-l2-and-dram) <br >
+2. [Tracking Runtime IPC, Instruction Monitoring, and Memory Accesses on L1D, L2, and DRAM ](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#2-tracking-runtime-memory-access-on-l1d-l2-and-dram) <br >
 3. [Tracking Runtime Power Consumption of GPU and Sub-components](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#3-tracking-runtime-power-consumption-of-gpu-and-sub-components) <br >
-4. [Visualizing Power Consumption, Memory Access and Core metrics at Runtime](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#4-visualizing-power-consumption-memory-access-and-core-metrics-at-runtime) <br />
+4. [Visualizing Power Consumption, Memory Accesses, and Streaming Multiprocessor Metrics](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#4-visualizing-power-consumption-memory-access-and-core-metrics) <br />
 
 ## 1. Prerequisites, Installing and Building of Simulator
 Detailed documentation on what GPGPU-Sim models are, how to configure it, and a guide to the source code can be found here: <http://gpgpu-sim.org/manual/>. Also a detailed documentation on AccelWattch, including how to configure it and a guide to the source code, can be found here: <https://accel-sim.github.io/accelwattch.html>.
@@ -97,7 +97,7 @@ folder. For each kernel, simulator will create seperate folders and power profil
 | -power_trace_zlevel | Compression level of the power trace output log | 6, (0=no comp, 9=highest) |
 | -power_simulation_mode | Switch performance counter input for power simulation | 0, (0=Sim, 1=HW, 2=HW-Sim Hybrid) |
 
-## 4. Visualizing Power Consumption, Memory Access and Core metrics at Runtime
+## 4. Visualizing Power Consumption, Memory Access and Core metrics
 
 Our visualizer tool takes csv files obtained via run-time simulation of a GPU kernel, and generates three different visualization schemes Here, the simulator supports `GTX480_FERMI, QV100_VOLTA, RTX2060S_TURING, RTX2060_TURING, RTX3070_AMPERE, TITAN_KEPLER, TITANV_VOLTA, TITANX_PASCAL` GPUs currently. As each GPU has a different memory hiearchy, I designed different schemes for each hiearchy. However, I designed SM visualization and GPU visualization once, and used these schemes for all GPUs. 
 
