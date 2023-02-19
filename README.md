@@ -36,11 +36,11 @@ The generated documentation with doxygen eases understanding classes, templates,
 
 
 ## 2. Tracking Runtime Memory Access on L1D, L2 and DRAM
-During the simulation, the simulator creates memory access information in the 
+During the simulation, the simulator creates memory access information in below path.  
 ```console
 user@gpgpu_sim/runtime_profiling_metrics/memory_accesses:~$
 ``` 
-folder. To enable memory access metric collection, one needs to specify the below flags in the `gpgpusim.config` file.
+To enable memory access metric collection, one needs to specify the below flags in the `gpgpusim.config` file.
 
 | Flags | Descriptions | Default value |
 |:------|:-------------|:--------------|
@@ -55,11 +55,11 @@ folder. To enable memory access metric collection, one needs to specify the belo
 | -accumulate_stats | Accumulate collected metrics | 0 = not accumulate | 
 
 ## 3. Tracking Runtime Power Consumption of GPU and Sub-components
-During simulation, the simulator records power consumption metrics in the 
+During simulation, the simulator records power consumption metrics in below path.
 ```console
 user@gpgpu_sim/runtime_profiling_metrics/energy_consumption:~$
 ```
-folder. For each kernel, simulator will create seperate folders and power profiling metrics at runtime. For now, the below power consumption metrics is provided, but these metrics may be enhanced further to investigate sub-units in an independent manner.
+For each kernel, simulator will create seperate folders and power profiling metrics at runtime. For now, the below power consumption metrics is provided, but these metrics may be enhanced further to investigate sub-units in an independent manner.
 
 > **GPU**  
 >> **Core**
