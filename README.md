@@ -32,7 +32,7 @@ Moreover, if you want to generate documentation files whose dependencies are spe
 user@gpgpu_sim:~$ make docs     # Generates doxygen files describing simulator elements 
 user@gpgpu_sim:~$ make cleandocs  	# Deletes pre-generated doxygen files if they exist.
 ``` 
-The doxygen-generated documentation eases understanding classes, templates, functions, etc for the simulator.
+The generated documentation with doxygen eases understanding classes, templates, functions, etc., for the simulator.
 
 
 ## 2. Tracking Runtime Memory Access on L1D, L2 and DRAM
