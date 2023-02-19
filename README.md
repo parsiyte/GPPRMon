@@ -1,5 +1,5 @@
 1. [Prerequisites, Installing and Building the GPGPU-Sim v4.2](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#1-prerequisites-installing-and-building-the-gpgpu-sim-v42) <br >
-   1.1. [Installing prerequisite libraries and the simulator](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#installing-prerequisite-libraries-and-the-simulator) <br > 
+   1.1. [Installing prerequisite libraries and simulator](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#installing-prerequisite-libraries-and-simulator) <br > 
    1.2. [Building Simulator with Doxygen Files](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#building-simulator-with-doxygen-files) <br > 
 2. [Tracking Runtime IPC, Instruction Monitoring, and Memory Accesses on L1D, L2, and DRAM ](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#2-tracking-runtime-memory-access-on-l1d-l2-and-dram) <br >
 3. [Tracking Runtime Power Consumption of GPU and Sub-components](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#3-tracking-runtime-power-consumption-of-gpu-and-sub-components) <br >
@@ -8,7 +8,7 @@
 ## 1. Prerequisites, Installing and Building the GPGPU-Sim v4.2
 Detailed documentation on what GPGPU-Sim models are, how to configure it, and a guide to the source code can be found here: <http://gpgpu-sim.org/manual/>. Also a detailed documentation on AccelWattch, including how to configure it and a guide to the source code, can be found here: <https://accel-sim.github.io/accelwattch.html>.
 
-### Installing prerequisite libraries and the simulator
+### Installing prerequisite libraries and simulator
 > **GPGPU-Sim dependencies:** ```gcc, g++, make, makedepend, xutils, bison, flex, zlib ,CUDA Toolkit``` <br>
 > (optional) **GPGPU-Sim documentation dependencies:** ```doxygen, graphvi``` <br>
 > (optional) **AerialVision dependencies:** ```python-pmw, python-ply, python-numpy, libpng12-dev, python-matplotlib``` <br>
@@ -16,7 +16,7 @@ Detailed documentation on what GPGPU-Sim models are, how to configure it, and a 
 
 After installing prerequisite libraries including the simulator, clone the accelWattch implementation of the simulator (GPGPU-Sim 4.2). Then, you should follow the below commands inside the simulator directory to build the simulator.
 
-### Building Simulator with Doxygen Files
+### Building simulator with doxygen files
 ```console
 user@gpgpu_sim:~$ source setup_environment <build_type>
 ```
