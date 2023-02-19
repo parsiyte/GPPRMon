@@ -77,7 +77,9 @@ During simulation, the simulator records power consumption metrics in the **runt
 
 Our visualizer tool takes csv files obtained via run-time simulation of a GPU kernel, and generates three different visualization schemes Here, the simulator supports `GTX480_FERMI, QV100_VOLTA, RTX2060S_TURING, RTX2060_TURING, RTX3070_AMPERE, TITAN_KEPLER, TITANV_VOLTA, TITANX_PASCAL` GPUs currently. As each GPU has a different memory hiearchy, I designed different schemes for each hiearchy. However, I designed SM visualization and GPU visualization once, and used these schemes for all GPUs. 
 
-1) ![KID=0_onSM=1_withCTA=1_interval=55500_56000](https://user-images.githubusercontent.com/73446582/219937394-0df2a6ed-92a7-4198-8532-9a36b1df83c8.png)
+1) A CTA's instruction issue/completion, Power consumption of the corresponding SM of and L1D usage of that SM. 
+
+![KID=0_onSM=1_withCTA=1_interval=55500_56000](https://user-images.githubusercontent.com/73446582/219937394-0df2a6ed-92a7-4198-8532-9a36b1df83c8.png)
 
 The first visualization displays the instructions of the CTA_ID=0 which is mapped onto SM=1. PC shows the instruction's pcs, Opcode shows the operational codes of the instructions of thread block, operands are the registers for each opcodes of the instructions. At the right most column (ISSUE/COMPLETION), visualizer displays the issuing and completion information of the instructionns for each warp at the first row and second row respectively. For example, For the above png file, cvta.to.global.u64 instruction whose PC = 656 is issued at 55557'th cycle for warp 7, and completed at 55563'th cycle. This scheme shows the issued and completed instructions of a CTA within a predetermined cycle interval. For the above example this interval is the \[55500, 56000).
 In addition, consumed run time power measurements is shown for the subcomponents of the SMs with the L1D cache usage. Total consumed power is represented by the **RunTimeDynm** parameter. Power components of an SM is calculated with four main parts as exe-units, functional-units, load-store units and idle-core. 
