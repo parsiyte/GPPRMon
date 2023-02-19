@@ -75,16 +75,20 @@ During simulation, the simulator records power consumption metrics in the **runt
 
 ## 4. Visualizing Power Consumption, Memory Access and Core metrics at Runtime
 
-Our visualizer tool takes csv files obtained via run-time simulation of a GPU kernel, and generates corresponding three different visualization scheme such that 
+Our visualizer tool takes csv files obtained via run-time simulation of a GPU kernel, and generates three different visualization schemes Here, the simulator supports `GTX480_FERMI, QV100_VOLTA, RTX2060S_TURING, RTX2060_TURING, RTX3070_AMPERE, TITAN_KEPLER, TITANV_VOLTA, TITANX_PASCAL` GPUs currently. As each GPU has a different memory hiearchy, I designed different schemes for each hiearchy. However, I designed SM visualization and GPU visualization once, and used these schemes for all GPUs. 
+
 1) ![KID=0_onSM=1_withCTA=1_interval=55500_56000](https://user-images.githubusercontent.com/73446582/219937394-0df2a6ed-92a7-4198-8532-9a36b1df83c8.png)
 
+The first visualization displays the instructions of the CTA_ID=0 which is mapped onto SM=1. PC shows the instruction's pcs, Opcode shows the operational codes of the instructions of thread block, operands are the registers for each opcodes of the instructions. At the right most column (ISSUE/COMPLETION), visualizer displays the issuing and completion information of the instructionns for each warp at the first row and second row respectively. For example, For the above png file, cvta.to.global.u64 instruction whose PC = 656 is issued at 55557'th cycle for warp 7, and completed at 55563'th cycle. This scheme shows the issued and completed instructions of a CTA within a predetermined cycle interval. For the above example this interval is the \[55500, 56000).
+In addition, consumed run time power measurements is shown for the subcomponents of the SMs with the L1D cache usage. Total consumed power is represented by the **RunTimeDynm** parameter. Power components of an SM is calculated with four main parts as exe-units, functional-units, load-store units and idle-core. 
+ 
 2) ![KID=0_memStatsForInterval=51000_51500](https://user-images.githubusercontent.com/73446582/219937330-5a3c4ed6-124a-44cb-95ff-5cd60c78a6c1.png)
+
 
 3) ![KID=0_gpuAverageStatsForInterval=55000_55500](https://user-images.githubusercontent.com/73446582/219937405-6ea3e694-706f-4b1d-866a-8c198e45424e.png)
 
 
-
-memory access mapping onto a visualization for the corresponding architecture. In GPUs, there are L1D caches located onto SMs, lots of memory partitions which includes L2 caches and DRAM banks and NoCs which connects L2 and DRAMs to the SMs. For the configured architectures, the number of L1D cache is equal to SMs, the number of DRAM banks is equal to the number of memory partition and the number of L2 caches is equal to the number of memory partition * 2. 
+In GPUs, there are L1D caches located onto SMs, lots of memory partitions which includes L2 caches and DRAM banks and NoCs which connects L2 and DRAMs to the SMs. For the configured architectures, the number of L1D cache is equal to SMs, the number of DRAM banks is equal to the number of memory partition and the number of L2 caches is equal to the number of memory partition * 2. 
 
 Here, we created architecture schemes for all of the ```SM2_GTX480, SM3_KEPLER_TITAN, SM6_TITANX, SM7_QV100, SM7_TITANV, SM75_RTX2060, SM75_RTX2060_S, SM86_RTX3070 ``` GPUs. 
 
