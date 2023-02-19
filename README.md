@@ -1,11 +1,9 @@
->[1. Prerequisites, Installing and Building of Simulator](##1.-Prerequisites,-Installing-and-Building-of-Simulator) <br />
->>[To install simulator and prerequisites libraries](###To-install-simulator-and-prerequisites-libraries) <br /> 
->>[To build](###To-build) <br /> 
->
->[2. Tracking Runtime Memory Access on L1D, L2 and DRAM](##2.-Tracking-Runtime-Memory-Access-on-L1D,-L2-and-DRAM) <br />
->[3. Tracking Runtime Power Consumption of GPU and Sub-components](##3.-Tracking-Runtime-Power-Consumption-of-GPU-and-Sub-components) <br />
->	[Example scenario](####Example-scenario) <br />
->[Visualization of a kernel in runtime of simulation](##Visualization-of-a-kernel-in-runtime-of-simulation) <br />
+[1. Prerequisites, Installing and Building of Simulator](##1.-Prerequisites,-Installing-and-Building-of-Simulator) <br />
+[To install simulator and prerequisites libraries](###To-install-simulator-and-prerequisites-libraries) <br /> 
+[To build](###To-build) <br /> 
+[2. Tracking Runtime Memory Access on L1D, L2 and DRAM](##2.-Tracking-Runtime-Memory-Access-on-L1D,-L2-and-DRAM) <br />
+[3. Tracking Runtime Power Consumption of GPU and Sub-components](##3.-Tracking-Runtime-Power-Consumption-of-GPU-and-Sub-components) <br />
+[4. Visualizing Power Consumption, Memory Access and Core metrics at Runtime] (##4.-Visualizing-Power Consumption,-Memory-Access-and-Core-metrics-at-Runtime) <br />
 
 ## 1. Prerequisites, Installing and Building of Simulator
 Detailed documentation on what GPGPU-Sim models are, how to configure it, and a guide to the source code can be found here: <http://gpgpu-sim.org/manual/>. Also a detailed documentation on AccelWattch, including how to configure it and a guide to the source code, can be found here: <https://accel-sim.github.io/accelwattch.html>.
@@ -66,7 +64,11 @@ folder. To enable memory access metric collection, one needs to specify the belo
 | -accumulate_stats | Accumulate collected metrics | 0 = not accumulate | 
 
 ## 3. Tracking Runtime Power Consumption of GPU and Sub-components
-During simulation, the simulator records power consumption metrics in the **runtime_profiling_metrics/energy_consumption** folder. For each kernel, simulator will create seperate folders and power profiling metrics at runtime. For now, the below power consumption metrics is provided, but these metrics may be enhanced further to investigate sub-units in an independent manner.
+During simulation, the simulator records power consumption metrics in the 
+```console
+user@gpgpu_sim/runtime_profiling_metrics/energy_consumption:~$
+```
+folder. For each kernel, simulator will create seperate folders and power profiling metrics at runtime. For now, the below power consumption metrics is provided, but these metrics may be enhanced further to investigate sub-units in an independent manner.
 
 > **GPU**  
 >> **Core**
@@ -99,41 +101,32 @@ During simulation, the simulator records power consumption metrics in the **runt
 
 Our visualizer tool takes csv files obtained via run-time simulation of a GPU kernel, and generates three different visualization schemes Here, the simulator supports `GTX480_FERMI, QV100_VOLTA, RTX2060S_TURING, RTX2060_TURING, RTX3070_AMPERE, TITAN_KEPLER, TITANV_VOLTA, TITANX_PASCAL` GPUs currently. As each GPU has a different memory hiearchy, I designed different schemes for each hiearchy. However, I designed SM visualization and GPU visualization once, and used these schemes for all GPUs. 
 
-1) A CTA's instruction issue/completion, Power consumption of the corresponding SM of and L1D usage of that SM. 
-
+1) A CTA's instruction issue/completion, Power consumption of the corresponding SM of and L1D usage of that SM. <br> 
 ![KID=0_onSM=1_withCTA=1_interval=55500_56000](https://user-images.githubusercontent.com/73446582/219937394-0df2a6ed-92a7-4198-8532-9a36b1df83c8.png)
 
 The first visualization displays the instructions of the CTA_ID=0 which is mapped onto SM=1. PC shows the instruction's pcs, Opcode shows the operational codes of the instructions of thread block, operands are the registers for each opcodes of the instructions. At the right most column (ISSUE/COMPLETION), visualizer displays the issuing and completion information of the instructionns for each warp at the first row and second row respectively. For example, For the above png file, cvta.to.global.u64 instruction whose PC = 656 is issued at 55557'th cycle for warp 7, and completed at 55563'th cycle. This scheme shows the issued and completed instructions of a CTA within a predetermined cycle interval. For the above example this interval is the \[55500, 56000).  <br>
 In addition, consumed run time power measurements is shown for the subcomponents of the SMs with the L1D cache usage. Total consumed power is represented by the **RunTimeDynm** parameter. Power components of an SM is calculated with four main parts as exe-units, functional-units, load-store units and idle-core. Also, IPC per SM is displayed at the bottom. <br> 
 
-2) Access information on the memory units
+2) Access information on the memory units and power consumption of memory controller + DRAM units. <br>
 ![KID=0_memStatsForInterval=51000_51500](https://user-images.githubusercontent.com/73446582/219937330-5a3c4ed6-124a-44cb-95ff-5cd60c78a6c1.png)
 
-The second visualization shows the accesses on L1D, L2 caches and DRAM partitions within the simulator interval. For caches, access descriptions as following:
+The second visualization shows the accesses on L1D, L2 caches (as ``` hits, hit_reserved_status, misses, reservation_failures, sector_misses, and mshr_hits ```) and DRAM partitions (as ```row buffer hits and row buffer misses```) within the simulator interval. For caches, access descriptions are as following:
  - **Hits:** Data is found in the corresponding sector of the line.
  - **Hit Reserved:** The line is allocated for the data, but the data does not arrive yet. Data will be located to the corresponding line and sector.
  - **Misses:** Miss is used for a cache line eviction. Line eviction is determined with respect to a dirty counter. Replacement policy is determined via cache configuration.
  - **Reservation Failures:** Whenever an access cannot find the data in the cache, it tries to create a miss request in MSHR buffer. When there is no slot to hold the corresponding miss in the buffer, it stalls the memory pipeline and the status for this situation is the reservation failures. 
  - **Sector Misses:** When data is not found in the looked sector of the cache line, access status is the sector miss.
- - **MSHR Hits:** When data is not found in the looked sector of the cache line, and miss request is already located in the MSHR buffer, it is recorded as MSHR hit.
+ - **MSHR Hits:** When data is not found in the looked sector of the cache line, and miss request is already located in the MSHR buffer, it is recorded as MSHR hit. <br>
 
+For DRAM, access descriptions are as following:
+ - **Row Buffer Hits:** Data is found in the corresponding sector of the line.
+ - **Row Buffer Misses:** The line is allocated for the data, but the data does not arrive yet. Data will be located to the corresponding line and sector.
 
+3) GPU Throughput and Power Consumption <br>
+GPUs mainly consist of SMs ,which holds functional units, register files and caches, NoCs and memory partitions in which there are DRAM banks and L2 caches. For the configured architectures, the number of L1D cache is equal to SMs (SIMT Core Clusters), the number of DRAM banks is equal to the number of memory partition and the number of L2 caches is equal to the number of memory partition * 2. <br>
+![KID=0_gpuAverageStatsForInterval=55000_55500](https://user-images.githubusercontent.com/73446582/219937405-6ea3e694-706f-4b1d-866a-8c198e45424e.png)
 
-
-3) ![KID=0_gpuAverageStatsForInterval=55000_55500](https://user-images.githubusercontent.com/73446582/219937405-6ea3e694-706f-4b1d-866a-8c198e45424e.png)
-
-
-In GPUs, there are L1D caches located onto SMs, lots of memory partitions which includes L2 caches and DRAM banks and NoCs which connects L2 and DRAMs to the SMs. For the configured architectures, the number of L1D cache is equal to SMs, the number of DRAM banks is equal to the number of memory partition and the number of L2 caches is equal to the number of memory partition * 2. 
-
-Here, we created architecture schemes for all of the ```SM2_GTX480, SM3_KEPLER_TITAN, SM6_TITANX, SM7_QV100, SM7_TITANV, SM75_RTX2060, SM75_RTX2060_S, SM86_RTX3070 ``` GPUs. 
-
-The represented metrics for caches: ``` hits, hit_reserved_status, misses, reservation_failures, sector_misses, and mshr_hits ```. Whenever an access created, the corresponding memory access looks for the closest cache. Cache is sectored such that if a line is 128 bytes, one sector for this cache line is 32 bytes.
-
-To execute the runtime memory access visualizer for a kernel, you must enable memory collection metrics as above. Then, you can viusalize the runtime memory access as executing the following command. 
-
-
-
-
+The third visualization shows the on average L1D, L2 cache and DRAM access statistics in the Memory Usage Metrics, average IPC among active SMs and Power Consumption Metrics of NoCs, memory partitions of L2 caches and MC+DRAM, and SMs.    
 
 #### Example scenario:
 1. mvt application from PolyBench benchmark suite is compiled with ```nvcc mvt.cu -o mvt -lcudart -arch=sm_70``` command and executed with ```./mvt > mvt.txt``` where **mvt.txt** will record normal performance outputs of the simulator. 
