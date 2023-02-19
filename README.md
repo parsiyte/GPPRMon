@@ -12,7 +12,7 @@ Detailed documentation on GPGPU-Sim, what GPU models and architectures exist, ho
 > **GPGPU-Sim dependencies:** ```gcc, g++, make, makedepend, xutils, bison, flex, zlib, CUDA Toolkit``` <br>
 > (optional) **GPGPU-Sim documentation dependencies:** ```doxygen, graphvi``` <br>
 > (optional) **AerialVision dependencies:** ```python-pmw, python-ply, python-numpy, libpng12-dev, python-matplotlib``` <br>
-> **CUDA SDK dependencies:** ```libxi-dev libxmu-dev libglut3-dev```  <br> 
+> **CUDA SDK dependencies:** ```libxi-dev, libxmu-dev, libglut3-dev```  <br> 
 
 After installing prerequisite libraries to run the simulator properly, clone the accelWattch implementation of the simulator (GPGPU-Sim 4.2). Then, you should follow the below commands inside the simulator directory to build the simulator.
 
