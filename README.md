@@ -19,9 +19,9 @@ After installing prerequisite libraries to run the simulator properly, clone the
 ### Building simulator with doxygen files
 ```console
 user@gpgpu_sim:~$ source setup_environment <build_type> 
-# That command sets the environment variables such that simulator can find related executables in the linkage path. <br>
-# If you want to debug the simulator (as it was written in C/C++), you should specify build_type as `debug` <br>
-# Otherwise, you don't need to specify it, blank as empty. It will automatically build the executables wiht `release` version <br>
+# That command sets the environment variables such that simulator can find related executables in the linkage path.
+# If you want to debug the simulator (as it was written in C/C++), you should specify build_type as `debug`.
+# Otherwise, you don't need to specify it, blank as empty. It will automatically build the executables with `release` version.
 ```
 
 
