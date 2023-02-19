@@ -3,7 +3,7 @@
 [To build](###To-build) <br /> 
 [2. Tracking Runtime Memory Access on L1D, L2 and DRAM](##2.-Tracking-Runtime-Memory-Access-on-L1D,-L2-and-DRAM) <br />
 [3. Tracking Runtime Power Consumption of GPU and Sub-components](##3.-Tracking-Runtime-Power-Consumption-of-GPU-and-Sub-components) <br />
-[4. Visualizing Power Consumption, Memory Access and Core metrics at Runtime] (##4.-Visualizing-Power Consumption,-Memory-Access-and-Core-metrics-at-Runtime) <br />
+[4. Visualizing Power Consumption, Memory Access and Core metrics at Runtime](##4.-Visualizing-Power Consumption,-Memory-Access-and-Core-metrics-at-Runtime) <br />
 
 ## 1. Prerequisites, Installing and Building of Simulator
 Detailed documentation on what GPGPU-Sim models are, how to configure it, and a guide to the source code can be found here: <http://gpgpu-sim.org/manual/>. Also a detailed documentation on AccelWattch, including how to configure it and a guide to the source code, can be found here: <https://accel-sim.github.io/accelwattch.html>.
