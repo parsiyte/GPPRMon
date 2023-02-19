@@ -19,20 +19,20 @@ After installing prerequisite libraries to run the simulator properly, clone the
 ### Building simulator with doxygen files
 ```console
 user@gpgpu_sim:~$ source setup_environment <build_type> 
-# That command sets the environment variables such that simulator can find related executables in the linkage path.
+# That command sets the environment variables so that the simulator can find related executables in the linkage path.
 # If you want to debug the simulator (as it was written in C/C++), you should specify build_type as `debug`.
-# Otherwise, you do not need to specify it, blank as empty. It will automatically build the executables with `release` version.
+# Otherwise, you do not need to specify it; blank as empty. It will automatically build the executables with `release` version.
 ```
 ```console
 user@gpgpu_sim:~$ make     #To compile source files, create and link the executable files of the simulator.
 user@gpgpu_sim:~$ make clean      #To clean the simulator executables
 ``` 
-Also if you want to generate documentations files whose dependency files are specified as optional, you must first install the dependencies. Afterwards, you can obtain the docs with 
+Moreover, if you want to generate documentation files whose dependencies are specified as optional, you must first install the dependencies. Afterward, you can obtain the docs with 
 ```console
 user@gpgpu_sim:~$ make docs     # Generates doxygen files describing simulator elements 
 user@gpgpu_sim:~$ make cleandocs  	# Deletes pre-generated doxygen files if they exist.
 ``` 
-These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
+The doxygen-generated documentation eases understanding classes, templates, functions, etc for the simulator.
 
 
 ## 2. Tracking Runtime Memory Access on L1D, L2 and DRAM
