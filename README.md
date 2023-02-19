@@ -121,11 +121,11 @@ For DRAM, access descriptions are as follows:
 
 3) GPU Throughput and Power Consumption <br>
 
-GPUs mainly consist of SMs ,which holds functional units, register files and caches, NoCs and memory partitions in which there are DRAM banks and L2 caches. For the configured architectures, the number of L1D cache is equal to SMs (SIMT Core Clusters), the number of DRAM banks is equal to the number of memory partition and the number of L2 caches is equal to the number of memory partition * 2. <br>
+GPUs mainly consist of SMs, which include functional units, register files and caches, NoCs, and memory partitions in which DRAM banks and L2 caches exist. For the configured architectures, the number of L1D caches is equal to SMs (SIMT Core Clusters), the number of DRAM banks is equal to the number of memory partitions, and the number of L2 caches is equal to twice the number of memory partitions. <br >
 
 ![KID=0_gpuAverageStatsForInterval=55000_55500](https://user-images.githubusercontent.com/73446582/219937405-6ea3e694-706f-4b1d-866a-8c198e45424e.png)
 
-The third visualization shows the on average L1D, L2 cache and DRAM access statistics in the Memory Usage Metrics, average IPC among active SMs and Power Consumption Metrics of NoCs, memory partitions of L2 caches and MC+DRAM, and SMs.    
+The third visualization shows the on-average L1D, L2 cache, and DRAM access statistics in the Memory Usage Metrics, average IPC among active SMs and Power Consumption Metrics of NoCs, memory partitions of L2 caches and MC+DRAM, and SMs. <br >
 
 #### Example scenario:
 1. mvt application from PolyBench benchmark suite is compiled with ```nvcc mvt.cu -o mvt -lcudart -arch=sm_70``` command and executed with ```./mvt > mvt.txt``` where **mvt.txt** will record normal performance outputs of the simulator. 
