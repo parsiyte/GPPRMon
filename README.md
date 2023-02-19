@@ -92,17 +92,19 @@ The simulator will create separate folders and power profiling metrics for each 
 Our visualizer tool takes .csv files obtained via runtime simulation of a GPU kernel and generates three different visualization schemes. Currently, the simulator supports `GTX480_FERMI, QV100_VOLTA, RTX2060S_TURING, RTX2060_TURING, RTX3070_AMPERE, TITAN_KEPLER, TITANV_VOLTA, TITANX_PASCAL` GPUs currently. As each GPU has a different memory hierarchy, I designed varying schemes for each hierarchy. However, I designed SM and GPU visualizations as one such that their designs are applicable for each GPU.
 
 1) A CTA's instruction issue/completion, Power consumption of the corresponding SM of and L1D usage of that SM. <br> 
+ 
 ![KID=0_onSM=1_withCTA=1_interval=55500_56000](https://user-images.githubusercontent.com/73446582/219937394-0df2a6ed-92a7-4198-8532-9a36b1df83c8.png)
 
 The first visualization displays the instructions for the 1st CTA, which is mapped onto the 1st SM. While PC shows the instruction's pc, Opcode shows the operational codes of the instructions of the 1st thread block. Operands show the register IDs for the corresponding opcode of the instructions.
 
-At the rightmost column (ISSUE/COMPLETION), the visualizer displays the issuing and completion information of the instructions for each warp at the first row and second row, respectively. For example, the first instruction is cvta.to.global.u64, whose PC is 656, is issued at the 55557th cycle by 7th warp and completed at the 55563rd cycle. 
+At the rightmost column (ISSUE/COMPLETION), the visualizer displays the issuing and completion information of the instructions for each warp in the first row and second row, respectively. For example, the first instruction is cvta.to.global.u64, whose PC is 656, is issued at the 55557th cycle by 7th warp and completed at the 55563rd cycle. 
 
 This scheme shows a CTA's issued and completed instructions within a predetermined cycle interval. For the above example, this interval is the \[55500, 56000).  <br>
 
 In addition, one may see the L1D cache usage and consumed runtime power measurements for the subcomponents of the SMs. The **RunTimeDynm** parameter represents the total consumed power for each section. Execution, functional and load/store units, and idle-core are the main sub-parts of an SM's power consumption. Also, IPC per SM is displayed at the bottom. <br> 
 
 2) Access information on the memory units and power consumption of memory controller + DRAM units. <br>
+ 
 ![KID=0_memStatsForInterval=51000_51500](https://user-images.githubusercontent.com/73446582/219937330-5a3c4ed6-124a-44cb-95ff-5cd60c78a6c1.png)
 
 The second visualization shows the accesses on L1D, L2 caches (as ``` hits, hit_reserved_status, misses, reservation_failures, sector_misses, and mshr_hits ```) and DRAM partitions (as ```row buffer hits and row buffer misses```) within the simulator interval. For caches, access descriptions are as following:
