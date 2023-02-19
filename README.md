@@ -43,28 +43,28 @@ To enable memory access metric collection, one needs to specify the below flags 
 
 | Flags | Descriptions | Default value |
 |:------|:-------------|:--------------|
-| -mem_profiler | Enables collecting memory access metrics | 0 = not enabled |
-| -mem_runtime_stat | Sampling frequency for the metric collection | 100 = sample for each 100 GPU cycles |
-| -IPC_per_prof_interval | Record IPC rates for each metric collection sample | 0 = do not collect | 
-| -instruction_monitor | Record issue/completion stats of the instructions | 0 = do not collect |
-| -L1D_metrics | Enable collecting metrics for L1D cache accesses | 0 = do not collect |
-| -L2_metrics | Enable collecting metrics for L2 cache accesses | 0 = do not collect |
-| -DRAM_metrics | Enable collecting metrics for DRAM accesses | 0 = do not collect |
-| -store_enable | Enable collecting metrics for both store and load instructions | 0 = just record metrics for load |
-| -accumulate_stats | Accumulate collected metrics | 0 = not accumulate | 
+| -mem_profiler | Enabling collecting memory access metrics | 0 = off |
+| -mem_runtime_stat | Determining the sampling frequency for the metric collection | 100 (record after each 100 GPU cycles) |
+| -IPC_per_prof_interval | Recording IPC rates for each metric collection sample | 0 = do not collect | 
+| -instruction_monitor | Recording issue/completion stats of the instructions | 0 = do not collect |
+| -L1D_metrics | Recording metrics for L1D cache accesses | 0 = do not collect |
+| -L2_metrics | Recordingollecting metrics for L2 cache accesses | 0 = do not collect |
+| -DRAM_metrics | Recording metrics for DRAM accesses | 0 = do not collect |
+| -store_enable | Recording metrics for both store and load instructions | 0 = just record metrics for load |
+| -accumulate_stats | Accumulating collected metrics | 0 = do not accumulate | 
 
 ## 3. Tracking Runtime Power Consumption of GPU and Sub-components
 During simulation, the simulator records power consumption metrics in the below path.
 ```console
 user@gpgpu_sim/runtime_profiling_metrics/energy_consumption:~$
 ```
-For each kernel, simulator will create seperate folders and power profiling metrics at runtime. For now, the below power consumption metrics is provided, but these metrics may be enhanced further to investigate sub-units in an independent manner.
+The simulator will create separate folders and power profiling metrics for each kernel at runtime. For now, the below power consumption metrics are supported, but these metrics may be enhanced further to investigate sub-units independently.
 
 > **GPU**  
 >> **Core**
->>> **Execution Unit** (Register FU, Schedulers, Functional Units etc.) <br>
->>> **Load Store Unit** (Crossbar, Shared Memory, Shared Mem Miss/Fill Buffer, Cache, Cache Prefetch Buffer, Cache WriteBack Buffer, Cache Miss Buffer etc.) <br>
->>> **Instruction Functional Unit** (Instruction Cache, Branch Target Buffer, Decoder, Branch Predictor etc.) <br>
+>>> **Execution Unit** (Register FU, Schedulers, Functional Units, etc.) <br>
+>>> **Load Store Unit** (Crossbar, Shared Memory, Shared Mem Miss/Fill Buffer, Cache, Cache Prefetch Buffer, Cache WriteBack Buffer, Cache Miss Buffer, etc.) <br>
+>>> **Instruction Functional Unit** (Instruction Cache, Branch Target Buffer, Decoder, Branch Predictor, etc.) <br>
 >>
 >> **Network on Chip** <br>
 >> **L2 Cache** <br>
@@ -76,14 +76,14 @@ For each kernel, simulator will create seperate folders and power profiling metr
 
 | Flags | Descriptions | Default value |
 |:------|:-------------|:--------------|
-| -power_simulation_enabled | Enables collecting power consumption metrics | 0 = not enabled |
-| -gpgpu_runtime_stat | Sampling frequency in terms of GPU cycle | 1000 cycles |
-| -power_per_cycle_dump | Dumps detailed power output in each sample | 0 = not enabled | 
-| -dvfs_enabled | Turns on/off dynamic voltage frequency scaling for power model | 0 = not enabled| 
-| -aggregate_power_stats | Record issue/completetion stats of the instructions | 0 = do not aggregate |
-| -steady_power_levels_enabled | Produce a file for the steady power levels | 0 = off |
+| -power_simulation_enabled | Enableing collecting power consumption metrics | 0 = off |
+| -gpgpu_runtime_stat | Determining the sampling frequency in terms of GPU cycle | 1000 cycles |
+| -power_per_cycle_dump | Dumping detailed power output in each sample | 0 = off | 
+| -dvfs_enabled | Turning on/off dynamic voltage frequency scaling for power model | 0 = not enabled| 
+| -aggregate_power_stats | Recording issue/completion stats of the instructions | 0 = do not aggregate |
+| -steady_power_levels_enabled | Producing a file for the steady power levels | 0 = off |
 | -steady_state_definition | allowed deviation:number of samples | 8:4 |
-| -power_trace_enabled | Produce a file for the power trace | 0 = off |
+| -power_trace_enabled | Producing a file for the power trace | 0 = off |
 | -power_trace_zlevel | Compression level of the power trace output log | 6, (0=no comp, 9=highest) |
 | -power_simulation_mode | Switch performance counter input for power simulation | 0, (0=Sim, 1=HW, 2=HW-Sim Hybrid) |
 
