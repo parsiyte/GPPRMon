@@ -44,7 +44,7 @@ During the simulation, the simulator creates memory access information in the `g
 | -accumulate_stats | Accumulate collected metrics | 0 = not accumulate | 
 
 ## 3. Tracking Runtime Power Consumption of GPU and Sub-components
-During simulation, the simulator creates memory access information in the **runtime_profiling_metrics/energy_consumption** folder. For each kernel, simulator will create seperate folders and power profiling metrics at runtime. For now, the below power consumption metrics is provided, but these metrics may be enhanced further to investigate sub-units in an independent manner.
+During simulation, the simulator records power consumption metrics in the **runtime_profiling_metrics/energy_consumption** folder. For each kernel, simulator will create seperate folders and power profiling metrics at runtime. For now, the below power consumption metrics is provided, but these metrics may be enhanced further to investigate sub-units in an independent manner.
 
 > **GPU**  
 >> **Core**
@@ -73,23 +73,18 @@ During simulation, the simulator creates memory access information in the **runt
 | -power_trace_zlevel | Compression level of the power trace output log | 6, (0=no comp, 9=highest) |
 | -power_simulation_mode | Switch performance counter input for power simulation | 0, (0=Sim, 1=HW, 2=HW-Sim Hybrid) |
 
+## 4. Visualizing Power Consumption, Memory Access and Core metrics at Runtime
 
-#### Example scenario:
-1. mvt application from PolyBench benchmark suite is compiled with ```nvcc mvt.cu -o mvt -lcudart -arch=sm_70``` command and executed with ```./mvt > mvt.txt``` where **mvt.txt** will record normal performance outputs of the simulator. 
-2. Here, runtime metrics related to the memory access to the components and energy consumption will be recorded in the runtime_profiling_metrics folder.
-	
-	2.1. Memory access metrics are collected via kernel basis such that there are separate memory accesses for each kernel because each kernel is called by the main function separately for our target applications.
-	
-	2.2. Energy consumption metrics are collected without taking care of kernel sequence. It will collect power dissipation till the end of GPU usage.
-	
-	2.3. After each 1 million cycles, new .csv files are generated to store the metrics in order not to fulfill RAM during the runtime of long GPU kernels. For instance, while f_core_eu.csv is the first metric file, f_core_eu_1.csv is the second metric file for the same application. f_core_eu_1.csv file is generated after the first 1 million cycles.
-3. Instead of using .txt files, the output format was converted to .csv files to easily manipulate those metrics as DataFrames in python.
-4. In addition to accumulating options for each metric type, one can collect metrics separately for each sampling cycle interval.
-5. Collecting store memory access option is added to the simulator because write misses occur on both L1D and L2.
+Our visualizer tool takes csv files obtained via run-time simulation of a GPU kernel, and generates corresponding three different visualization scheme such that 
+1) ![KID=0_onSM=1_withCTA=1_interval=55500_56000](https://user-images.githubusercontent.com/73446582/219937394-0df2a6ed-92a7-4198-8532-9a36b1df83c8.png)
 
-## Visualization of a kernel in runtime of simulation
--------------------------------------------
-This is a visualizer tool that takes csv files obtained via run-time simulation of a GPU kernel, and generates corresponding memory access mapping onto a visualization for the corresponding architecture. In GPUs, there are L1D caches located onto SMs, lots of memory partitions which includes L2 caches and DRAM banks and NoCs which connects L2 and DRAMs to the SMs. For the configured architectures, the number of L1D cache is equal to SMs, the number of DRAM banks is equal to the number of memory partition and the number of L2 caches is equal to the number of memory partition * 2. 
+2) ![KID=0_memStatsForInterval=51000_51500](https://user-images.githubusercontent.com/73446582/219937330-5a3c4ed6-124a-44cb-95ff-5cd60c78a6c1.png)
+
+3) ![KID=0_gpuAverageStatsForInterval=55000_55500](https://user-images.githubusercontent.com/73446582/219937405-6ea3e694-706f-4b1d-866a-8c198e45424e.png)
+
+
+
+memory access mapping onto a visualization for the corresponding architecture. In GPUs, there are L1D caches located onto SMs, lots of memory partitions which includes L2 caches and DRAM banks and NoCs which connects L2 and DRAMs to the SMs. For the configured architectures, the number of L1D cache is equal to SMs, the number of DRAM banks is equal to the number of memory partition and the number of L2 caches is equal to the number of memory partition * 2. 
 
 Here, we created architecture schemes for all of the ```SM2_GTX480, SM3_KEPLER_TITAN, SM6_TITANX, SM7_QV100, SM7_TITANV, SM75_RTX2060, SM75_RTX2060_S, SM86_RTX3070 ``` GPUs. 
 
@@ -106,31 +101,27 @@ To execute the runtime memory access visualizer for a kernel, you must enable me
 ```console
 user@simulator_path/runtime_visualizer$ python3 metric_manipulator.py sampling_cycle arch_name
 ```
+
+
+
+
+
+#### Example scenario:
+1. mvt application from PolyBench benchmark suite is compiled with ```nvcc mvt.cu -o mvt -lcudart -arch=sm_70``` command and executed with ```./mvt > mvt.txt``` where **mvt.txt** will record normal performance outputs of the simulator. 
+2. Here, runtime metrics related to the memory access to the components and energy consumption will be recorded in the runtime_profiling_metrics folder.
+	
+	2.1. Memory access metrics are collected via kernel basis such that there are separate memory accesses for each kernel because each kernel is called by the main function separately for our target applications.
+	
+	2.2. Energy consumption metrics are collected without taking care of kernel sequence. It will collect power dissipation till the end of GPU usage.
+	
+	2.3. After each 1 million cycles, new .csv files are generated to store the metrics in order not to fulfill RAM during the runtime of long GPU kernels. For instance, while f_core_eu.csv is the first metric file, f_core_eu_1.csv is the second metric file for the same application. f_core_eu_1.csv file is generated after the first 1 million cycles.
+3. Instead of using .txt files, the output format was converted to .csv files to easily manipulate those metrics as DataFrames in python.
+4. In addition to accumulating options for each metric type, one can collect metrics separately for each sampling cycle interval.
+5. Collecting store memory access option is added to the simulator because write misses occur on both L1D and L2.
+
+## Visualization of a kernel in runtime of simulation
  - **sampling_cycle** is the run-time visualization interval. 
  - **arch_name** is the GPU name which may be ``` GTX480, TITAN, TITANX, RTX2060, RTX2060S, TITANV, QV100, RTX3070```
-
-
-1. (5500-6000)
-![5500_5980](https://user-images.githubusercontent.com/73446582/215438622-621d34ba-7e9b-4c84-bac7-67d971745f5b.png)
-2. (6000-6500)
-![6000_6480](https://user-images.githubusercontent.com/73446582/215438628-9956b99f-9524-4ae8-9a96-58f6af588540.png)
-3. (6500-7000)
-![6500_6980](https://user-images.githubusercontent.com/73446582/215438634-81faa265-52d8-4b24-829b-a5b0cab2258e.png)
-4. (7000-7500)
-![7000_7480](https://user-images.githubusercontent.com/73446582/215438820-f6eb42fb-f8eb-4ecb-9a1a-d16423ac8130.png)
-5. (7500-8000)
-![7500_7980](https://user-images.githubusercontent.com/73446582/215438644-2f60bbcd-f26d-409d-b0f3-e4bf1ab97c62.png)
-6. (8000-8500)
-![8000_8480](https://user-images.githubusercontent.com/73446582/215438657-f0afc67e-8634-455c-a4fa-60074fdf76f5.png)
-7. (8500-9000)
-![8500_8980](https://user-images.githubusercontent.com/73446582/215438664-291fe3a9-70f5-4c0c-b5fe-a09c3720a035.png)
-...
-420. (215000-215500)
-![215000_215480](https://user-images.githubusercontent.com/73446582/215439556-78824537-83e1-4d3f-8da8-004b9afb01b1.png)
-439. (224000-225500)
-![224500_224980](https://user-images.githubusercontent.com/73446582/215439792-e83f72df-3400-4bf0-bcfa-a4cc7cce0485.png)
-
-
 
 #### TO DO:
 - Shared memory extension, non-coalesced extension.
