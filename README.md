@@ -1,9 +1,9 @@
-[1. Prerequisites, Installing and Building of Simulator](##1.-Prerequisites,-Installing-and-Building-of-Simulator) <br />
-[To install simulator and prerequisites libraries](###To-install-simulator-and-prerequisites-libraries) <br /> 
-[To build](###To-build) <br /> 
-[2. Tracking Runtime Memory Access on L1D, L2 and DRAM](##2.-Tracking-Runtime-Memory-Access-on-L1D,-L2-and-DRAM) <br />
-[3. Tracking Runtime Power Consumption of GPU and Sub-components](##3.-Tracking-Runtime-Power-Consumption-of-GPU-and-Sub-components) <br />
-[4. Visualizing Power Consumption, Memory Access and Core metrics at Runtime](##4.-Visualizing-Power-Consumption,-Memory-Access-and-Core-metrics-at-Runtime) <br />
+1. [Prerequisites, Installing and Building of Simulator](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#1-prerequisites-installing-and-building-of-simulator)  <br > 
+   1.1. [To install simulator and prerequisites libraries](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#to-install-simulator-and-prerequisites-libraries) <br > 
+   1.2. [To build](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#to-build) <br > 
+2. [Tracking Runtime Memory Access on L1D, L2 and DRAM](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#2-tracking-runtime-memory-access-on-l1d-l2-and-dram) <br >
+3. [Tracking Runtime Power Consumption of GPU and Sub-components](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#3-tracking-runtime-power-consumption-of-gpu-and-sub-components) <br >
+4. [Visualizing Power Consumption, Memory Access and Core metrics at Runtime](https://github.com/topcuburak/GPGPU-Sim_Runtime_MemAccess-EnergyConsumption_Profiler/blob/main/README.md#4-visualizing-power-consumption-memory-access-and-core-metrics-at-runtime) <br />
 
 ## 1. Prerequisites, Installing and Building of Simulator
 Detailed documentation on what GPGPU-Sim models are, how to configure it, and a guide to the source code can be found here: <http://gpgpu-sim.org/manual/>. Also a detailed documentation on AccelWattch, including how to configure it and a guide to the source code, can be found here: <https://accel-sim.github.io/accelwattch.html>.
