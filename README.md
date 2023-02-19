@@ -22,29 +22,18 @@ user@gpgpu_sim:~$ source setup_environment <build_type>
 # That command sets the environment variables such that simulator can find related executables in the linkage path.
 # If you want to debug the simulator (as it was written in C/C++), you should specify build_type as `debug`.
 # Otherwise, you do not need to specify it, blank as empty. It will automatically build the executables with `release` version.
-
-#**Then**
-
 ```
-
 ```console
-user@gpgpu_sim:~$ make
+user@gpgpu_sim:~$ make     #To compile source files, create and link the executable files of the simulator.
+user@gpgpu_sim:~$ make clean      #To clean the simulator executables
 ``` 
-command builds the simulator compiling and creating executables. Furthermore, 
-```console
-user@gpgpu_sim:~$ make clean
-``` 
-command cleans the executables of the simulator. <br>
-
 Also if you want to generate documentations files whose dependency files are specified as optional, you must first install the dependencies. Afterwards, you can obtain the docs with 
 ```console
-user@gpgpu_sim:~$ make docs
+user@gpgpu_sim:~$ make docs     # Generates doxygen files describing simulator elements 
+user@gpgpu_sim:~$ make cleandocs  	# Deletes pre-generated doxygen files if they exist.
 ``` 
-and delete them with 
-```console
-user@gpgpu_sim:~$ make cleandocs
-```
-commands. These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
+These doxygen-generated documentation will help you to understand classes, templates, functions, etc.
+
 
 ## 2. Tracking Runtime Memory Access on L1D, L2 and DRAM
 During the simulation, the simulator creates memory access information in the 
