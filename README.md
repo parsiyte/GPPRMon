@@ -132,7 +132,7 @@ GPUs mainly consist of SMs, which include functional units, register files and c
 The third visualization shows the on-average L1D, L2 cache, and DRAM access statistics in the Memory Usage Metrics, average IPC among active SMs and Power Consumption Metrics of NoCs, memory partitions of L2 caches and MC+DRAM, and SMs. <br >
 
 
-We have experimented the page ranking algorithm both on GV100 and RTX2060 S. Also, we have configured the GPU of Jetson AGX Xavier system on module, and emperimented the Fast Fouirer Transform Algorithm on it. 
+We have experimented the page ranking algorithm both on GV100 and RTX2060 S. Also, we have configured the GPU of Jetson AGX Xavier system on module, and emperimented the Fast Fouirer Transform Algorithm on it. Experimental profiling and displaying results are too large to upload here. However, we hold them into our local servers. If you want, we can transmit to any address. Do not hesitate contacting us for any of the result. 
 
 
 
