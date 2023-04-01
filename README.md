@@ -103,6 +103,10 @@ This scheme shows a CTA's issued and completed instructions within a predetermin
 
 In addition, one may see the L1D cache usage and consumed runtime power measurements for the subcomponents of the SMs. The **RunTimeDynm** parameter represents the total consumed power for each section. Execution, functional and load/store units, and idle-core are the main sub-parts of an SM's power consumption. Also, IPC per SM is displayed at the bottom. <br> 
 
+Also, we provide a display options for the average runtime memory accesses and, IPC vs power dissipation among the units below.  
+![caseStudyAvMem](https://user-images.githubusercontent.com/73446582/229313529-dd0448b7-d5bf-4661-a60a-c40ca4ad6e2e.png)
+![caseStudy2](https://user-images.githubusercontent.com/73446582/229313533-0bcba516-a383-4bc2-b469-ab2e18dd49d5.png)
+
 2) Access information on the memory units and power consumption of memory controller + DRAM units. <br>
  
 ![KID=0_memStatsForInterval=51000_51500](https://user-images.githubusercontent.com/73446582/219937330-5a3c4ed6-124a-44cb-95ff-5cd60c78a6c1.png)
