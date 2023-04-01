@@ -1,0 +1,156 @@
+from PIL import ImageFont
+
+
+def plotGPU(image, kid, ipc, l1d, l1d_rgb, l2, l2_rgb, dram, dram_rgb, power, int_start, 
+            int_finish, nof_active_SMs, grid_size, cta_size, nof_L1D, nof_L2, nof_DRAM):
+  
+  #image = Image.new(mode = "RGBA", size = (1280, 1024), color=(100, 100, 100))
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 20)
+  headline = (255, 150, 20)
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 25)
+  image.line([(5, 5), (755, 5)], fill = (0,0,0), width = 4)
+  image.line([(5, 5), (5, 320)], fill = (0,0,0), width = 4)
+  image.line([(5, 320), (755, 320)], fill = (0,0,0), width = 4)
+  image.line([(755, 5), (755, 320)], fill = (0,0,0), width = 4)
+  image.rectangle([(200, 12), (550, 43)], outline = "white", fill = (255, 255, 240))
+  image.text((220, 15), "Memory Usage Metrics", font = font_title, fill=(0, 0, 0))
+
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 20)
+  image.rectangle([(10, 50 + 10), (250, 50 + 250)], outline = "white", fill = (l1d_rgb[0], l1d_rgb[1], l1d_rgb[2]))
+  image.rectangle([(10, 50 + 10), (250, 50 + 38)], outline = "white", fill = headline)
+  image.text((15, 50 + 12), "L1D Cache Stats (Av)", font = font_title, fill=(0, 0, 0))
+  image.text((15, 50 + 10 + 30),  "Hit Rate  : " + '{:.3f}'.format(l1d[0]) , font = font_title, fill=(0, 0, 0))
+  image.text((15, 50 + 10 + 60),  "Hit Reserv: " + '{:.3f}'.format(l1d[1]) , font = font_title, fill=(0, 0, 0))
+  image.text((15, 50 + 10 + 90),  "Miss Rate : " + '{:.3f}'.format(l1d[2]) , font = font_title, fill=(0, 0, 0))
+  image.text((15, 50 + 10 + 120), "Res Fail  : " + '{:.3f}'.format(l1d[3]) , font = font_title, fill=(0, 0, 0))
+  image.text((15, 50 + 10 + 150), "SecMiss R : " + '{:.3f}'.format(l1d[4]) , font = font_title, fill=(0, 0, 0))
+  image.text((15, 50 + 10 + 180), "MSHR Hit R: " + '{:.3f}'.format(l1d[5]) , font = font_title, fill=(0, 0, 0))
+
+  image.rectangle([(260, 50 + 10), (500, 50 + 250)], outline = "white", fill = (l2_rgb[0], l2_rgb[1], l2_rgb[2]))
+  image.rectangle([(260, 50 + 10), (500, 50 + 38)], outline = "white", fill = headline)
+  image.text((15 + 250, 50 + 12), "L2 Cache Stats (Av.)", font = font_title, fill=(0, 0, 0))
+  image.text((15 + 250, 50 + 10 + 30),  "Hit Rate  : " + '{:.3f}'.format(l2[0]) , font = font_title, fill=(0, 0, 0))
+  image.text((15 + 250, 50 + 10 + 60),  "Hit Reserv: " + '{:.3f}'.format(l2[1]) , font = font_title, fill=(0, 0, 0))
+  image.text((15 + 250, 50 + 10 + 90),  "Miss Rate : " + '{:.3f}'.format(l2[2]) , font = font_title, fill=(0, 0, 0))
+  image.text((15 + 250, 50 + 10 + 120), "Res Fail  : " + '{:.3f}'.format(l2[3]) , font = font_title, fill=(0, 0, 0))
+  image.text((15 + 250, 50 + 10 + 150), "SecMiss R : " + '{:.3f}'.format(l2[4]) , font = font_title, fill=(0, 0, 0))
+  image.text((15 + 250, 50 + 10 + 180), "MSHR Hit R: " + '{:.3f}'.format(l2[5]) , font = font_title, fill=(0, 0, 0))
+
+  image.rectangle([(510, 50 + 10), (750, 50 + 100)], outline = "white", fill = (dram_rgb[0], dram_rgb[1], dram_rgb[2]))
+  image.rectangle([(510, 50 + 10), (750, 50 + 38)], outline = "white", fill = headline)
+  image.text((15 + 500, 50 + 12), "Dram Row Util (Av.)", font = font_title, fill=(0, 0, 0))
+  image.text((15 + 500, 50 + 10 + 30),  "Row Buff H: " + '{:.3f}'.format(dram[0]) , font = font_title, fill=(0, 0, 0))
+  image.text((15 + 500, 50 + 10 + 60),  "Row Buff M: " + '{:.3f}'.format(dram[1]) , font = font_title, fill=(0, 0, 0))
+
+  image.line([(765, 5), (1270, 5)], fill = (0,0,0), width = 4)
+  image.line([(765, 5), (765, 250)], fill = (0,0,0), width = 4)
+  image.line([(765, 250), (1270, 250)], fill = (0,0,0), width = 4)
+  image.line([(1270, 5), (1270, 250)], fill = (0,0,0), width = 4)
+
+  image.rectangle([(775, 15), (940, 45)], fill = (50, 100, 150), width = 2)    
+  image.text((780, 20), "Kernel ID: " + str(kid), font = font_title, fill=(0, 0, 0))
+  image.rectangle([(775, 50), (1240, 80)], fill = (100, 150, 200), width = 2)    
+  image.text((780, 55), "Grid: " + grid_size + " -- Block: " + cta_size, font = font_title, fill=(0, 0, 0))
+  image.rectangle([(775, 85), (1020, 115)], fill = (150, 200, 250), width = 2)    
+  image.text((780, 90), "# of active SM: " + str(nof_active_SMs), font = font_title, fill=(0, 0, 0))
+  image.rectangle([(775, 120), (1250, 150)], fill = (200, 250, 50), width = 2)    
+  image.text((780, 125), "Cycle interval:" + "[" + str(int_start) + ", " + str(int_finish) + "]", font = font_title, fill=(0, 0, 0)) 
+  image.text((780, 160), "# of L1D: " + str(nof_L1D), font = font_title, fill=(0, 0, 0))
+  image.text((780, 185), "# of L2 partition: " + str(nof_L2), font = font_title, fill=(0, 0, 0))
+  image.text((780, 210), "# of DRAM partition: " + str(nof_DRAM), font = font_title, fill=(0, 0, 0))
+
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 25)
+  image.line([(5, 330), (300, 330)], fill = (0,0,0), width = 4)
+  image.line([(5, 330), (5, 420)], fill = (0,0,0), width = 4)
+  image.line([(5, 420), (300, 420)], fill = (0,0,0), width = 4)
+  image.line([(300, 330), (300, 420)], fill = (0,0,0), width = 4)
+  image.rectangle([(15, 340), (290, 370)], outline = "white", fill = (255, 255, 240))
+  image.text((20, 342), "Core Average IPC", font = font_title, fill=(0, 0, 0))
+
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 20)
+  image.rectangle([(72, 380), (220, 410)], outline = "white", fill = (40, 175, 100))
+  image.text((100, 385), '{:.4f}'.format(ipc), font = font_title, fill=(0, 0, 0))
+
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 25)
+  image.line([(5, 430), (1265, 430)], fill = (0,0,0), width = 4)
+  image.line([(5, 430), (5, 710)], fill = (0,0,0), width = 4)
+  image.line([(5, 710), (1265, 710)], fill = (0,0,0), width = 4)
+  image.line([(1265, 430), (1265, 710)], fill = (0,0,0), width = 4)
+  image.rectangle([(420, 440), (820, 470)], outline = "white", fill = (255, 255, 240))
+  image.text((430, 442), "Power Consumption Metrics", font = font_title, fill=(0, 0, 0))
+
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 20)
+  image.rectangle([(15, 520), (250, 700)], outline = "white", fill = (240, 240, 100))
+  image.text((18, 523),       "PeakPower(W)     :", font = font_title, fill=(0, 0, 0))
+  image.text((18, 523 + 30),  "TotalLeakage(W)  :", font = font_title, fill=(0, 0, 0))
+  image.text((18, 523 + 60),  "PeakDynamic(W)   :", font = font_title, fill=(0, 0, 0))
+  image.text((18, 523 + 90),  "SubThrsLeak(W)   :", font = font_title, fill=(0, 0, 0))
+  image.text((18, 523 + 120), "GateLeakage(W)   :", font = font_title, fill=(0, 0, 0))
+  image.text((18, 523 + 150), "RunTimeDynamic(W):", font = font_title, fill=(0, 0, 0))
+
+  nocs_col = (100, 150, 250)  
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 25)
+  image.rectangle([(260, 480), (460, 515)], outline = "white", fill = nocs_col)
+  image.text((262, 482), "Cons on NoCs:", font = font_title, fill=(0, 0, 0))
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 20)
+  image.rectangle([(270, 520), (450, 700)], outline = "white", fill = nocs_col)
+  image.text((275, 523 + 60),  '{:.3f}'.format(power['proc_nocs']["PeakDynamic(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((275, 523 + 90),  '{:.3f}'.format(power['proc_nocs']["SubthresholdLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((275, 523 + 120), '{:.3f}'.format(power['proc_nocs']["GateLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((275, 523 + 150), '{:.3f}'.format(power['proc_nocs']["RunTimeDynamic(W)"]), font = font_title, fill=(0, 0, 0))
+
+  l2_col = (150, 100, 250)
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 25)
+  image.rectangle([(465, 480), (640, 515)], outline = "white", fill = l2_col)
+  image.text((470, 482), "Cons on L2:", font = font_title, fill=(0, 0, 0))
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 20)
+  image.rectangle([(475, 520), (630, 700)], outline = "white", fill = l2_col)
+  image.text((480, 523 + 60),  '{:.3f}'.format(power['proc_l2']["PeakDynamic(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((480, 523 + 90),  '{:.3f}'.format(power['proc_l2']["SubthresholdLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((480, 523 + 120), '{:.3f}'.format(power['proc_l2']["GateLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((480, 523 + 150), '{:.3f}'.format(power['proc_l2']["RunTimeDynamic(W)"]), font = font_title, fill=(0, 0, 0))
+
+  mem_col = (250, 150, 100)
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 25)
+  image.rectangle([(645, 480), (840, 515)], outline = "white", fill = mem_col)
+  image.text((650, 482), "Cons on Mem:", font = font_title, fill=(0, 0, 0))
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 20)
+  image.rectangle([(660, 520), (830, 700)], outline = "white", fill = mem_col)
+  image.text((665, 523 + 60),  '{:.3f}'.format(power['proc_mcs']["PeakDynamic(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((665, 523 + 90),  '{:.3f}'.format(power['proc_mcs']["SubthresholdLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((665, 523 + 120), '{:.3f}'.format(power['proc_mcs']["GateLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((665, 523 + 150), '{:.3f}'.format(power['proc_mcs']["RunTimeDynamic(W)"]), font = font_title, fill=(0, 0, 0))
+
+  core_col = (100, 250, 150)
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 25)
+  image.rectangle([(845, 480), (1045, 515)], outline = "white", fill = core_col)
+  image.text((850, 482), "Cons on Cores:", font = font_title, fill=(0, 0, 0))
+
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 20)
+  image.rectangle([(855, 520), (1035, 700)], outline = "white", fill = core_col)
+  image.text((860, 523 + 60),  '{:.3f}'.format(power['proc_cores']["PeakDynamic(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((860, 523 + 90),  '{:.3f}'.format(power['proc_cores']["SubthresholdLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((860, 523 + 120), '{:.3f}'.format(power['proc_cores']["GateLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((860, 523 + 150), '{:.3f}'.format(power['proc_cores']["RunTimeDynamic(W)"]), font = font_title, fill=(0, 0, 0))
+
+  gpu_col = (150, 150, 150)
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 25)
+  image.rectangle([(1050, 480), (1250, 515)], outline = "white", fill = gpu_col)
+  image.text((1055, 482), "Cons on GPU:", font = font_title, fill=(0, 0, 0))
+
+  font_title = ImageFont.truetype('FreeMonoBold.ttf', 20)
+  image.rectangle([(1060, 520), (1240, 700)], outline = "white", fill = gpu_col)
+  image.text((1065, 523 + 0),  '{:.3f}'.format(power ['proc_total']["PeakPower(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((1065, 523 + 30),  '{:.3f}'.format(power['proc_total']["TotalLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((1065, 523 + 60),  '{:.3f}'.format(power['proc_total']["PeakDynamic(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((1065, 523 + 90),  '{:.3f}'.format(power['proc_total']["SubthresholdLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((1065, 523 + 120), '{:.3f}'.format(power['proc_total']["GateLeakage(W)"]), font = font_title, fill=(0, 0, 0))
+  image.text((1065, 523 + 150), '{:.3f}'.format(power['proc_total']["RunTimeDynamic(W)"]), font = font_title, fill=(0, 0, 0))
+
+
+
+
+
+
+#pasbelge@nvi.gov.tr
+
