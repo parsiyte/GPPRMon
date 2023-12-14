@@ -79,15 +79,9 @@ class Processor : public Component {
   Component core, l2, l3, l1dir, l2dir, noc, mcs, cc, nius, pcies,
       flashcontrollers;
 
-  FILE *f_l2;
-  FILE *f_noc;
-  FILE *f_noc_router;
-  FILE *f_noc_router_virtual_ch_buff;
-  FILE *f_noc_router_crossbar;
-  FILE *f_noc_router_arbiter;
-
   int numCore, numL2, numL3, numNOC, numL1Dir, numL2Dir;
-  Processor(ParseXML *XML_interface, unsigned long long *cycle, unsigned long long *tot_cycle);
+  Processor(ParseXML *XML_interface, unsigned long long *cycle, unsigned long long *tot_cycle,
+            unsigned *gpu_kernel_counter);
   void compute();
   void set_proc_param();
   void visualizer_print(gzFile visualizer_file);
@@ -99,9 +93,6 @@ class Processor : public Component {
   void displayInterconnectType(int interconnect_type_, uint32_t indent = 0);
   double l2_power;
   double idle_core_power;
-
-  unsigned long long *proc_cycle;
-  unsigned long long *proc_tot_cycle;
 
   double get_const_dynamic_power() {
     double constpart = 0;
@@ -332,9 +323,14 @@ class Processor : public Component {
   void coefficient_scale();
   void iterative_lse(double *, double *);
 
-  void open_folders();
+  void open_folders(bool new_kernel);
   void reopen_folders(unsigned long long cycle);
   bool power_prof_en;
+  unsigned long long *proc_cycle;
+  unsigned long long *proc_tot_cycle;
+  unsigned *kernel_id;
+  unsigned old_kernel;
+ 
   FILE *f_processor;
   FILE *f_p_total_cores;
   FILE *f_p_total_l2;
@@ -344,7 +340,12 @@ class Processor : public Component {
 };
 
 #endif /* PROCESSOR_H_ */
-
+//  FILE *f_l2;
+//  FILE *f_noc;
+//  FILE *f_noc_router;
+//  FILE *f_noc_router_virtual_ch_buff;
+//  FILE *f_noc_router_crossbar;
+//  FILE *f_noc_router_arbiter;
 //  fprintf(tot_cores, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
 //  fprintf(tot_l2, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");
 //  fprintf(tot_nocs, "Cycle,Area,PeakDynm,SubThresholdLeak,GateLeak,RunTimeDynm\n");

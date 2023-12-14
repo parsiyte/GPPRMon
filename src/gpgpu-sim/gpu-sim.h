@@ -366,11 +366,14 @@ struct mem_metric_profiler_conf {
   bool m_shmem;
   bool m_l2;
   bool m_dram;
+  bool m_ipc;
+  bool m_inst_monitor;
   bool m_noncoal;
   unsigned sampling_cycle;
   bool store_en;
   bool accumulate_stats;
 };
+
 
 class gpgpu_sim_config : public power_config,
                          public gpgpu_functional_sim_config {
@@ -412,6 +415,7 @@ class gpgpu_sim_config : public power_config,
   unsigned get_core_freq() const { return core_freq; }
   unsigned num_shader() const { return m_shader_config.num_shader(); }
   unsigned num_cluster() const { return m_shader_config.n_simt_clusters; }
+  unsigned num_cores_per_cluster() const { return m_shader_config.n_simt_cores_per_cluster; }
   unsigned get_max_concurrent_kernel() const { return max_concurrent_kernel; }
   unsigned checkpoint_option;
 
@@ -535,7 +539,7 @@ class mem_access_profiler {
     mem_access_profiler(gpgpu_sim *simulator);
     ~mem_access_profiler();
 
-    void determine_kernel_details(gpgpu_sim *simulator, kernel_info_t *kinfo);
+//    void determine_kernel_details(gpgpu_sim *simulator, kernel_info_t *kinfo);
     void update_l1d(const char *cache_name, cache_request_status stat);
     void print_l1d(unsigned long long cycle);
 
@@ -545,24 +549,29 @@ class mem_access_profiler {
     void update_dram(unsigned part_id, bool hit);
     void print_dram(unsigned long long cycle);
 
+    void update_ipc(unsigned cluster_id, unsigned nof_inst, unsigned cycle);
+    void print_ipc(unsigned long long cycle);
+
+    void update_inst_monitor(unsigned cycle);
+    FILE **instruction_mon_before;
+    FILE **instruction_mon_after;
+
   private:
     FILE **l1d_cache;
     FILE **l2_cache;
     FILE **dram;
-
-//    FILE **file_l1d;
-//    FILE **file_l2;
-//    FILE **file_dram;
+    FILE *ipc_file;
 
     unsigned **l1d_accesses;
     unsigned **l2_accesses;
     unsigned **dram_accesses;
-//    unsigned warp_per_tb;
+    unsigned *ipc;
 
-    unsigned nof_cluster;
+    unsigned nof_SM;
     unsigned nof_subp;
     unsigned nof_part;
     bool accumulate_results;
+    gpgpu_sim *sim;
 };
 
 class gpgpu_sim : public gpgpu_t {
@@ -737,6 +746,7 @@ class gpgpu_sim : public gpgpu_t {
   unsigned long long gpu_tot_sim_insn;
   unsigned long long gpu_sim_insn_last_update;
   unsigned gpu_sim_insn_last_update_sid;
+  unsigned *kernel_id;
   occupancy_stats gpu_occupancy;
   occupancy_stats gpu_tot_occupancy;
 

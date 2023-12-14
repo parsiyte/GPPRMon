@@ -302,13 +302,14 @@ class ptx_thread_info {
     m_hw_wid = wid;
     m_hw_tid = tid;
     m_functionalSimulationMode = fsim;
+    m_flushed = false;
   }
 
   void ptx_fetch_inst(inst_t &inst) const;
   void ptx_exec_inst(warp_inst_t &inst, unsigned lane_id);
 
   const ptx_version &get_ptx_version() const;
-  void set_reg(const symbol *reg, const ptx_reg_t &value);
+  void set_reg(const symbol *reg, const ptx_reg_t &value, bool flush);
   void print_reg_thread(char *fname);
   void resume_reg_thread(char *fname, symbol_table *symtab);
   ptx_reg_t get_reg(const symbol *reg);
@@ -317,16 +318,21 @@ class ptx_thread_info {
                               int derefFlag);
   void set_operand_value(const operand_info &dst, const ptx_reg_t &data,
                          unsigned type, ptx_thread_info *thread,
-                         const ptx_instruction *pI);
+                         const ptx_instruction *pI, bool flush);
   void set_operand_value(const operand_info &dst, const ptx_reg_t &data,
                          unsigned type, ptx_thread_info *thread,
-                         const ptx_instruction *pI, int overflow, int carry);
+                         const ptx_instruction *pI, int overflow, int carry,
+                         bool flush);
+
+  void print_value_contents(const ptx_reg_t &value);
+
   void get_vector_operand_values(const operand_info &op, ptx_reg_t *ptx_regs,
                                  unsigned num_elements);
   void set_vector_operand_values(const operand_info &dst,
                                  const ptx_reg_t &data1, const ptx_reg_t &data2,
                                  const ptx_reg_t &data3,
-                                 const ptx_reg_t &data4);
+                                 const ptx_reg_t &data4,
+                                 bool flush);
   void set_wmma_vector_operand_values(
       const operand_info &dst, const ptx_reg_t &data1, const ptx_reg_t &data2,
       const ptx_reg_t &data3, const ptx_reg_t &data4, const ptx_reg_t &data5,
@@ -338,6 +344,8 @@ class ptx_thread_info {
   unsigned get_uid() const { return m_uid; }
 
   dim3 get_ctaid() const { return m_ctaid; }
+  dim3 get_cta_size() {return m_nctaid;}
+
   dim3 get_tid() const { return m_tid; }
   dim3 get_ntid() const { return m_ntid; }
   class gpgpu_sim *get_gpu() {
@@ -377,7 +385,7 @@ class ptx_thread_info {
   void set_ctaid(dim3 ctaid) { m_ctaid = ctaid; }
   void set_ntid(dim3 tid) { m_ntid = tid; }
   void set_nctaid(dim3 cta_size) { m_nctaid = cta_size; }
-
+  
   unsigned get_builtin(int builtin_id, unsigned dim_mod);
 
   void set_done();
@@ -456,6 +464,11 @@ class ptx_thread_info {
     m_core->popc_reduction(ctaid, barid, value);
   }
 
+  // ptx thread flush control info
+  void set_flushed() {m_flushed = true; }
+  bool get_flushed() { return m_flushed; }
+  void clear_flushed() {m_flushed = false;}
+
   // Jin: get corresponding kernel grid for CDP purpose
   kernel_info_t &get_kernel() { return m_kernel; }
 
@@ -470,6 +483,7 @@ class ptx_thread_info {
   ptx_warp_info *m_warp_info;
   ptx_cta_info *m_cta_info;
   ptx_reg_t m_last_set_operand_value;
+  bool m_flushed;
 
  private:
   bool m_functionalSimulationMode;

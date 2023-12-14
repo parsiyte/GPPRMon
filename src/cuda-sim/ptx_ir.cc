@@ -1125,8 +1125,9 @@ void copy_buffer_to_frame(ptx_thread_info *thread, const arg_buffer_t &a) {
     ptx_reg_t value = a.get_reg();
     operand_info dst_reg =
         operand_info(a.get_dst(), thread->get_gpu()->gpgpu_ctx);
-    thread->set_reg(dst_reg.get_symbol(), value);
-  } else {
+    thread->set_reg(dst_reg.get_symbol(), value, false);
+  } 
+  else {
     const void *buffer = a.get_param_buffer();
     size_t size = a.get_param_buffer_size();
     const symbol *dst = a.get_dst();
@@ -1462,7 +1463,7 @@ void ptx_instruction::print_insn() const {
 }
 
 void ptx_instruction::print_insn(FILE *fp) const {
-  fprintf(fp, "%s", to_string().c_str());
+  fprintf(fp, "%s\n", to_string().c_str());
 }
 
 std::string ptx_instruction::to_string() const {

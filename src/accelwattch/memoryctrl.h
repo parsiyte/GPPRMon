@@ -146,17 +146,21 @@ class MemoryController : public Component {
 
   // clock_network clockNetwork;
   MemoryController(ParseXML *XML_interface, InputParameter *interface_ip_,
-                   enum MemoryCtrl_type mc_type_, enum Dram_type dram_type_);
+                   enum MemoryCtrl_type mc_type_, enum Dram_type dram_type_,
+                   unsigned *gpu_kernel_counter);
   void set_mc_param();
   void computeEnergy(bool is_tdp = true);
-  void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
+  void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true, bool new_kernel = false);
 
-  void set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle);
-  void open_folders();
+  void set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle,
+                     unsigned *gpu_kernel_counter);
+
+  void open_folders(bool new_kernel);
   void reopen_folders(unsigned long long cycle);
 
   unsigned long long *proc_cycle;
   unsigned long long *proc_tot_cycle;
+  unsigned *kernel_id;
 
   bool power_prof_en;
 

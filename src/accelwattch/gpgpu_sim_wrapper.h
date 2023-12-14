@@ -84,7 +84,8 @@ class gpgpu_sim_wrapper {
  public:
   gpgpu_sim_wrapper(bool power_simulation_enabled, char* xmlfile, 
                     int power_simulation_mode, bool dvfs_enabled,
-                    unsigned long long *cycle, unsigned long long *tot_cycle);
+                    unsigned long long *cycle, unsigned long long *tot_cycle,
+                    unsigned *gpu_kernel_counter);
   ~gpgpu_sim_wrapper();
 
   void init_mcpat(char* xmlfile, char* powerfile, char* power_trace_file,
@@ -151,6 +152,7 @@ class gpgpu_sim_wrapper {
 
   unsigned long long *m_cycle;
   unsigned long long *m_tot_cycle;
+  unsigned *kernel_id;
 
  private:
   void print_steady_state(int position, double init_val);

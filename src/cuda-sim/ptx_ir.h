@@ -1325,11 +1325,15 @@ class function_info {
   }
   bool has_return() const { return m_return_var_sym != NULL; }
   const symbol *get_return_var() const { return m_return_var_sym; }
+//  const ptx_instruction *get_instruction(unsigned PC) const {
   const ptx_instruction *get_instruction(unsigned PC) const {
+
     unsigned index = PC - m_start_PC;
-    if (index < m_instr_mem_size) return m_instr_mem[index];
+    if (index < m_instr_mem_size) 
+      return m_instr_mem[index];
     return NULL;
   }
+
   addr_t get_start_PC() const { return m_start_PC; }
 
   void finalize(memory_space *param_mem);

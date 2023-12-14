@@ -965,10 +965,12 @@ class inst_t {
   virtual void print_insn(FILE *fp) const {
     fprintf(fp, " [inst @ pc=0x%04x] ", pc);
   }
+
   bool is_load() const {
     return (op == LOAD_OP || op == TENSOR_CORE_LOAD_OP ||
             memory_op == memory_load);
   }
+
   bool is_store() const {
     return (op == STORE_OP || op == TENSOR_CORE_STORE_OP ||
             memory_op == memory_store);
@@ -1056,6 +1058,9 @@ class warp_inst_t : public inst_t {
     m_uid = 0;
     m_empty = true;
     m_config = NULL;
+    m_ctaid = 0;
+    issued_instructions.reset();
+    completed_instructions.reset();
   }
   warp_inst_t(const core_config *config) {
     m_uid = 0;
@@ -1069,6 +1074,9 @@ class warp_inst_t : public inst_t {
     m_is_printf = false;
     m_is_cdp = 0;
     should_do_atomic = true;
+    m_ctaid = 0;
+    issued_instructions.reset();
+    completed_instructions.reset();
   }
   virtual ~warp_inst_t() {}
 
@@ -1168,10 +1176,12 @@ class warp_inst_t : public inst_t {
     return m_warp_issued_mask.count();
   }  // for instruction counting
   bool empty() const { return m_empty; }
+
   unsigned warp_id() const {
     assert(!m_empty);
     return m_warp_id;
   }
+
   unsigned warp_id_func() const  // to be used in functional simulations only
   {
     return m_warp_id;
@@ -1212,6 +1222,10 @@ class warp_inst_t : public inst_t {
 
   const core_config * get_core_config() { return m_config; }
 
+  void set_cta_id(dim3 curr_cta, dim3 total_cta);
+  unsigned m_ctaid;
+  unsigned m_core_id;
+
  protected:
   unsigned m_uid;
   bool m_empty;
@@ -1229,6 +1243,7 @@ class warp_inst_t : public inst_t {
   active_mask_t
       m_warp_issued_mask;  // active mask at issue (prior to predication test)
                            // -- for instruction counting
+
 
   struct per_thread_info {
     per_thread_info() {
@@ -1254,6 +1269,9 @@ class warp_inst_t : public inst_t {
  public:
   int m_is_cdp;
   int m_cta_id;
+  active_mask_t issued_instructions;  // issued instruction monitor
+  active_mask_t completed_instructions;  // completed instruction monitor
+  char inst_string[256];
 };
 
 void move_warp(warp_inst_t *&dst, warp_inst_t *&src);

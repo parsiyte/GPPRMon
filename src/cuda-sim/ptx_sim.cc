@@ -320,7 +320,7 @@ void ptx_thread_info::cpy_tid_to_reg(dim3 tid) {
   const symbol *r0 = m_symbol_table->lookup("$r0");
   if (r0) {
     // No need to set pid if kernel doesn't use it
-    set_reg(r0, data);
+    set_reg(r0, data, false);
   }
 }
 

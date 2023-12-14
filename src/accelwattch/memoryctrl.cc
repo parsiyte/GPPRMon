@@ -936,17 +936,18 @@ DRAM::DRAM(ParseXML* XML_interface, InputParameter* interface_ip_,
 MemoryController::MemoryController(ParseXML* XML_interface,
                                    InputParameter* interface_ip_,
                                    enum MemoryCtrl_type mc_type_,
-                                   enum Dram_type dram_type_)
+                                   enum Dram_type dram_type_,
+                                   unsigned *gpu_kernel_counter)
     : XML(XML_interface),
       interface_ip(*interface_ip_),
       mc_type(mc_type_),
       frontend(0),
       transecEngine(0),
       PHY(0),
-      pipeLogic(0) {
-  /* All computations are for a single MC
-   *
-   */
+      pipeLogic(0) 
+{
+  /* All computations are for a single MC */
+  kernel_id = gpu_kernel_counter;
   interface_ip.wire_is_mat_type = 2;
   interface_ip.wire_os_mat_type = 2;
   interface_ip.wt = Global;
@@ -1034,12 +1035,16 @@ void MemoryController::computeEnergy(bool is_tdp) {
                              (XML->sys.target_core_clockrate * 1e6);  // Jingwen
     PHY->computeEnergy(is_tdp);
   }
-  if (is_tdp) {
+  if (is_tdp) 
+  {
     power = power + frontend->power + transecEngine->power;
-    if (mcp.type == 0 || (mcp.type == 1 && mcp.withPHY)) {
+    if (mcp.type == 0 || (mcp.type == 1 && mcp.withPHY)) 
+    {
       power = power + PHY->power;
     }
-  } else {
+  } 
+  else 
+  {
     rt_power = rt_power + frontend->rt_power + transecEngine->rt_power +
                dram->rt_power;
     if (mcp.type == 0 || (mcp.type == 1 && mcp.withPHY)) {
@@ -1048,17 +1053,36 @@ void MemoryController::computeEnergy(bool is_tdp) {
   }
 }
 
-void MemoryController::open_folders()
+void MemoryController::open_folders(bool new_kernel)
 {
-  f_mc_front_end_engine = fopen("runtime_profiling_metrics/energy_consumption"
-                                "/f_mc_front_end_engine.csv", "w+");
-  f_mc_transaction_engine = fopen("runtime_profiling_metrics/energy_consumption"
-                                "/f_mc_transaction_engine.csv", "w+");
-  f_mc_phy = fopen("runtime_profiling_metrics/energy_consumption/f_mc_phy.csv", "w+");
+  if (new_kernel) {
+    fclose(f_mc_front_end_engine);  
+    fclose(f_mc_transaction_engine);
+    fclose(f_mc_phy);
+  }
+  
+  f_mc_front_end_engine = NULL;
+  f_mc_transaction_engine = NULL;
+  f_mc_phy = NULL;
+  
+  char fname_mc_fee[250]; //front end engine
+  char fname_mc_te[250];  //transaction engine
+  char fname_mc_phy[250];  
+
+  sprintf(fname_mc_fee, "runtime_profiling_metrics/energy_consumption/kernel_%d/"
+                  "f_mc_front_end_engine.csv", *kernel_id);
+  f_mc_front_end_engine = fopen(fname_mc_fee, "w+");
+
+  sprintf(fname_mc_te, "runtime_profiling_metrics/energy_consumption/kernel_%d/"
+                  "f_mc_transaction_engine.csv", *kernel_id);
+  f_mc_transaction_engine = fopen(fname_mc_te, "w+");
+
+  sprintf(fname_mc_phy, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_mc_phy.csv", *kernel_id);
+  f_mc_phy = fopen(fname_mc_phy, "w+");
 
   if (!(f_mc_front_end_engine && f_mc_transaction_engine && f_mc_phy)) {
-    printf("One of the main Processor csv files to track power consumption "
-           "cannot be opened among memory controller files\n");
+    printf("One of the main sub-memory controller csv files to track power consumption "
+           "cannot be opened.\n");
     exit(1);
   }  
 
@@ -1081,22 +1105,25 @@ void MemoryController::reopen_folders(unsigned long long cycle){
 
   unsigned seq = cycle / 1000000;
   char comm[256];
-  sprintf(comm, "runtime_profiling_metrics/energy_consumption/f_mc_front_end_engine_%u.csv", seq);
+  sprintf(comm, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_mc_front_end_engine_%u.csv", 
+          *kernel_id, seq+1);
   f_mc_front_end_engine = fopen(comm, "w+");
 
   char comm_2[256];
-  sprintf(comm_2, "runtime_profiling_metrics/energy_consumption/f_mc_transaction_engine_%u.csv", seq);
+  sprintf(comm_2, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_mc_transaction_engine_%u.csv", 
+                   *kernel_id, seq + 1);
   f_mc_transaction_engine = fopen(comm_2, "w+");
 
   char comm_3[256];
-  sprintf(comm_3, "runtime_profiling_metrics/energy_consumption/f_mc_phy_%u.csv", seq);
+  sprintf(comm_3, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_mc_phy_%u.csv", 
+                  *kernel_id, seq + 1);
   f_mc_phy = fopen(comm_3, "w+");
 
   if (!(f_mc_front_end_engine && f_mc_transaction_engine && f_mc_phy)) {
     printf("One of the main Processor csv files to track power consumption "
            "cannot be opened among memory controller files\n");
     exit(1);
-  }  
+  }
 
   fprintf(f_mc_front_end_engine, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
   fflush(f_mc_front_end_engine);
@@ -1107,24 +1134,24 @@ void MemoryController::reopen_folders(unsigned long long cycle){
 }
 
 
-void MemoryController::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
+void MemoryController::displayEnergy(uint32_t indent, int plevel, bool is_tdp, bool new_kernel) {
   string indent_str(indent, ' ');
   string indent_str_next(indent + 2, ' ');
   bool long_channel = XML->sys.longer_channel_device;
 
-  if (power_prof_en == false)
+  if (power_prof_en == false || new_kernel)
   {
-    open_folders();
+    open_folders(new_kernel);
     power_prof_en = true;
   }
 
-  if ((*proc_cycle + *proc_tot_cycle) % 1000000 == 0 && (*proc_cycle + *proc_tot_cycle) > 25000)
-    reopen_folders(*proc_cycle + *proc_tot_cycle);
+  if ((*proc_cycle) % 1000000 == 0 && (*proc_cycle) > 25000)
+    reopen_folders(*proc_cycle);
 
-  if (is_tdp && power_prof_en && (proc_cycle != NULL && proc_tot_cycle != NULL)) 
+  if (is_tdp && power_prof_en && proc_cycle != NULL) 
   {
      fprintf(f_mc_front_end_engine, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
-               *proc_cycle + *proc_tot_cycle,
+               *proc_cycle,
                frontend->area.get_area() * 1e-6,
                frontend->power.readOp.dynamic * mcp.clockRate,
           (long_channel ? frontend->power.readOp.longer_channel_leakage
@@ -1135,7 +1162,7 @@ void MemoryController::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
     //frontend->displayEnergy(indent + 4, is_tdp);
 
      fprintf(f_mc_transaction_engine, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
-               *proc_cycle + *proc_tot_cycle,
+               *proc_cycle,
                transecEngine->area.get_area() * 1e-6,
                transecEngine->power.readOp.dynamic * mcp.clockRate,
           (long_channel ? transecEngine->power.readOp.longer_channel_leakage
@@ -1147,7 +1174,7 @@ void MemoryController::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
      if (mcp.type == 0 || (mcp.type == 1 && mcp.withPHY)) 
      {
           fprintf(f_mc_phy, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
-                   *proc_cycle + *proc_tot_cycle,
+                   *proc_cycle,
                     PHY->area.get_area() * 1e-6,
                     PHY->power.readOp.dynamic * mcp.clockRate,
                     (long_channel ? PHY->power.readOp.longer_channel_leakage
@@ -1157,19 +1184,19 @@ void MemoryController::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
           fflush(f_mc_phy);
      }
   } 
-  else {
-    cout << "Memory Controller:" << endl;
-    cout << indent_str_next << "Area = " << area.get_area() * 1e-6 << " mm^2"
-         << endl;
-    cout << indent_str_next
-         << "Peak Dynamic = " << power.readOp.dynamic * mcp.clockRate << " W"
-         << endl;
-    cout << indent_str_next << "Subthreshold Leakage = " << power.readOp.leakage
-         << " W" << endl;
-    cout << indent_str_next << "Gate Leakage = " << power.readOp.gate_leakage
-         << " W" << endl;
-    cout << endl;
-  }
+//  else {
+//    cout << "Memory Controller:" << endl;
+//    cout << indent_str_next << "Area = " << area.get_area() * 1e-6 << " mm^2"
+//         << endl;
+//    cout << indent_str_next
+//         << "Peak Dynamic = " << power.readOp.dynamic * mcp.clockRate << " W"
+//         << endl;
+//    cout << indent_str_next << "Subthreshold Leakage = " << power.readOp.leakage
+//         << " W" << endl;
+//    cout << indent_str_next << "Gate Leakage = " << power.readOp.gate_leakage
+//         << " W" << endl;
+//    cout << endl;
+//  }
 }
 
 void DRAM::set_dram_param() {
@@ -1274,9 +1301,11 @@ MCFrontEnd ::~MCFrontEnd() {
 }
 
 void MemoryController::set_gpu_clock(unsigned long long *cycle, 
-                                     unsigned long long *tot_cycle){
+                                     unsigned long long *tot_cycle, 
+                                     unsigned *gpu_kernel_counter){
   proc_cycle = cycle;
   proc_tot_cycle = tot_cycle;
+  kernel_id = gpu_kernel_counter;  
 }
 
 MemoryController ::~MemoryController() {

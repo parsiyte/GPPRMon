@@ -198,7 +198,8 @@ unsigned memory_stats_t::memlatstat_done(mem_fetch *mf) {
   shader_mem_lat_log(mf->get_sid(), mf_latency);
   mf_total_lat_table[mf->get_tlx_addr().chip][mf->get_tlx_addr().bk] +=
       mf_latency;
-  if (mf_latency > max_mf_latency) max_mf_latency = mf_latency;
+  if (mf_latency > max_mf_latency) 
+    max_mf_latency = mf_latency;
   return mf_latency;
 }
 
@@ -350,7 +351,8 @@ void memory_stats_t::memlatstat_print(unsigned n_mem, unsigned gpu_mem_n_bk) {
     printf("average row accesses per activate:\n");
     for (i = 0; i < n_mem; i++) {
       printf("dram[%d]: ", i);
-      for (j = 0; j < gpu_mem_n_bk; j++) {
+      for (j = 0; j < gpu_mem_n_bk; j++) 
+      {
         total_row_accesses += row_access[i][j];
         total_num_activates += num_activates[i][j];
         printf("%9f ", (float)row_access[i][j] / num_activates[i][j]);

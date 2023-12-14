@@ -195,7 +195,6 @@ def IPC(nof_sm, start_interval, finish_interval, kernel):
 
   if start_interval < 1000000:
     path = path + "ipc.csv" 
-
   else:
     rem = int(start_interval / 1000000) 
     path = path + "ipc_" + str(rem + 1) + ".csv" 
@@ -203,16 +202,12 @@ def IPC(nof_sm, start_interval, finish_interval, kernel):
   ipc_rates = np.zeros(nof_sm, dtype = float)
   file = open(path, 'r')
   reader = csv.reader(file) 
-
   counter = 0
   for row in reader:
     if "cycle" not in row and int(row[0]) >= start_interval and int(row[0]) < finish_interval:
       counter += 1
-      for j in range(0, 7):
-        if row[j+1] == '':
-          print(row)        
+      for j in range(0, nof_sm):
         ipc_rates[j] += float(row[j+1])
-    
     if "cycle" not in row and finish_interval < int(row[0]):
       break
   file.close()

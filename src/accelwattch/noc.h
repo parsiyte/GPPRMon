@@ -77,6 +77,7 @@ class NoC : public Component {
   void computeEnergy_link_bus(bool is_tdp = true);
   void displayEnergy_link_bus(uint32_t indent = 0, int plevel = 100,
                               bool is_tdp = true);
+
   ~NoC();
 };
 

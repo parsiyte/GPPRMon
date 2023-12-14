@@ -54,7 +54,8 @@ void mcpat_cycle(const gpgpu_sim_config &config,
                  class gpgpu_sim_wrapper *wrapper,
                  class power_stat_t *power_stats, unsigned stat_sample_freq,
                  unsigned tot_cycle, unsigned cycle, unsigned tot_inst,
-                 unsigned inst, bool dvfs_enabled) {
+                 unsigned inst, bool dvfs_enabled) 
+{
   static bool mcpat_init = true;
 
   if (mcpat_init) {  // If first cycle, don't have any power numbers yet
@@ -62,7 +63,7 @@ void mcpat_cycle(const gpgpu_sim_config &config,
     return;
   }
 
-  if ((tot_cycle + cycle) % stat_sample_freq == 0) 
+  if (cycle % stat_sample_freq == 0) 
   {
     if(dvfs_enabled)
     {

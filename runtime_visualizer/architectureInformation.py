@@ -6,9 +6,6 @@ def collectArchitectureInformation(arch):
   if arch == "GTX480":
     path = "SM2_GTX480"
 
-  elif arch == "TITAN":
-    path = "SM3_KEPLER_TITAN"
-
   elif arch == "TITANX":
     path = "SM6_TITANX"
 
@@ -23,12 +20,26 @@ def collectArchitectureInformation(arch):
 
   elif arch == "GV100":
     path = "SM7_QV100"
-#              SM75_RTX2060
+
   elif arch == "RTX3070":
     path = "SM86_RTX3070"
 
+  elif arch == "V100":
+    path = "V100"
 
-  path = "../configs/tested-cfgs/"+ path + "/gpgpusim.config"
+  elif arch == "JetsonAGXXavier":
+    path = "JetsonAGXXavier"
+
+  elif arch == "XavierNX" or arch == "V100":
+    path = "XavierNX"
+
+
+  if arch == "V100" or arch == "JetsonAGXXavier" or arch == "XavierNX":
+    path = "../newGPUConfigs/" + path + "/gpgpusim.config"
+  
+  else: 
+    path = "../configs/tested-cfgs/"+ path + "/gpgpusim.config"
+  
   file = open(path, 'r')
   lines = len(file.readlines())
   file.close()

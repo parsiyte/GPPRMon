@@ -49,6 +49,7 @@ void mem_access_t::init(gpgpu_context *ctx) {
   m_addr = 0;
   m_req_size = 0;
 }
+
 void warp_inst_t::issue(const active_mask_t &mask, unsigned warp_id,
                         unsigned long long cycle, int dynamic_warp_id,
                         int sch_id) {
@@ -472,6 +473,12 @@ void warp_inst_t::generate_mem_accesses() {
   m_mem_accesses_created = true;
 }
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
+
 void warp_inst_t::memory_coalescing_arch(bool is_write,
                                          mem_access_type access_type) {
   // see the CUDA manual where it discusses coalescing rules before reading this
@@ -742,6 +749,7 @@ void warp_inst_t::memory_coalescing_arch_reduce_and_send(
       assert(lower_half_used && upper_half_used);
     }
   }
+  
   m_accessq.push_back(mem_access_t(access_type, addr, size, is_write,
                                    info.active, info.bytes, info.chunks,
                                    m_config->gpgpu_ctx));
@@ -1184,13 +1192,23 @@ void simt_stack::update(simt_mask_t &thread_done, addr_vector_t &next_pc,
   }
 }
 
-void core_t::execute_warp_inst_t(warp_inst_t &inst, unsigned warpId) {
-  for (unsigned t = 0; t < m_warp_size; t++) {
-    if (inst.active(t)) {
+void warp_inst_t::set_cta_id(dim3 curr_cta, dim3 total_cta){
+  m_ctaid = (total_cta.x * total_cta.y) * curr_cta.z +
+             total_cta.x * curr_cta.y + 
+             curr_cta.x;   
+}
+
+void core_t::execute_warp_inst_t(warp_inst_t &inst, unsigned warpId) 
+{
+  for (unsigned t = 0; t < m_warp_size; t++) 
+  {
+    if (inst.active(t)) 
+    {
       if (warpId == (unsigned(-1))) warpId = inst.warp_id();
       unsigned tid = m_warp_size * warpId + t;
       m_thread[tid]->ptx_exec_inst(inst, t);
-
+      inst.set_cta_id(m_thread[tid]->get_ctaid(),
+                      m_thread[tid]->get_cta_size());
       // virtual function
       checkExecutionStatusAndUpdate(inst, t, tid);
     }

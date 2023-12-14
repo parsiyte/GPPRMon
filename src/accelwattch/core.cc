@@ -872,7 +872,8 @@ LoadStoreU::LoadStoreU(ParseXML* XML_interface, int ithCore_,
       coredynp(dyn_p_),
       LSQ(0),
       exist(exist_) {
-  if (!exist) return;
+  if (!exist) 
+    return;
   int idx, tag, data, size, line, assoc;
   bool debug = false;
   int ldst_opcode = XML->sys.core[ithCore].opcode_width;  // 16;
@@ -2111,7 +2112,8 @@ EXECU::EXECU(ParseXML* XML_interface, int ithCore_,
       fpTagBypass(0),
       exist(exist_),
       rf_fu_clockRate(exClockRate) {
-  if (!exist) return;
+  if (!exist) 
+    return;
   double fu_height = 0.0;
   clockRate = coredynp.clockRate;
   // cout <<"EXECU exClockRate: "<<exClockRate<<endl;
@@ -2915,17 +2917,19 @@ Core::Core(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_,
   exClockRate = clockRate * XML->sys.core[ithCore].core_clock_ratio;
 
   executionTime = coredynp.executionTime;
-  ifu = new InstFetchU(XML, ithCore, &interface_ip, coredynp);
-  lsu = new LoadStoreU(XML, ithCore, &interface_ip, coredynp);
-  mmu = new MemManU(XML, ithCore, &interface_ip, coredynp);
-  exu = new EXECU(XML, ithCore, &interface_ip, lsu->lsq_height, coredynp,
+  ifu = new InstFetchU(XML, ithCore, &interface_ip, coredynp); //instruction fetch unit
+  lsu = new LoadStoreU(XML, ithCore, &interface_ip, coredynp); //load store unit
+  mmu = new MemManU(XML, ithCore, &interface_ip, coredynp); //memory management unit
+  exu = new EXECU(XML, ithCore, &interface_ip, lsu->lsq_height, coredynp, //execution unit
                   exClockRate, true);
 
-  undiffCore = new UndiffCore(XML, ithCore, &interface_ip, coredynp);
-  if (coredynp.core_ty == OOO) {
-    rnu = new RENAMINGU(XML, ithCore, &interface_ip, coredynp);
+  undiffCore = new UndiffCore(XML, ithCore, &interface_ip, coredynp); //UndiffCore
+
+  if (coredynp.core_ty == OOO) 
+  {
+    rnu = new RENAMINGU(XML, ithCore, &interface_ip, coredynp); //renaming unit
   }
-  corepipe = new Pipeline(&interface_ip, coredynp);
+  corepipe = new Pipeline(&interface_ip, coredynp); //pipeline
 
   if (coredynp.core_ty == OOO) {
     pipeline_area_per_unit =
@@ -4423,7 +4427,8 @@ void SchedulerU::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
 }
 
 void LoadStoreU::computeEnergy(bool is_tdp) {
-  if (!exist) return;
+  if (!exist) 
+    return;
 
   executionTime =
       XML->sys.total_cycles / (XML->sys.target_core_clockrate * 1e6);  // Syed
@@ -5109,7 +5114,8 @@ void LoadStoreU::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
   string indent_str_next(indent + 2, ' ');
   bool long_channel = XML->sys.longer_channel_device;
 
-  if (is_tdp) {
+  if (is_tdp) 
+  {
     cout << indent_str << "Shared Memory:" << endl;
     cout << indent_str_next << "Area = " << sharedmemory.area.get_area() * 1e-6
          << " mm^2" << endl;
@@ -5128,6 +5134,8 @@ void LoadStoreU::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
          << endl;
     cout << endl;
 
+//    fprintf(f_mc_front_end_engine, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+//    fprintf();
     cout << indent_str << "Data Cache:" << endl;
     cout << indent_str_next << "Area = " << dcache.area.get_area() * 1e-6
          << " mm^2" << endl;
@@ -6143,33 +6151,86 @@ void Core::computeEnergy(bool is_tdp) {
   }
 }
 
-void Core::open_folders()
+void Core::open_folders(bool new_kernel)
 {
-  f_core_inst_fu = fopen("runtime_profiling_metrics/energy_consumption/f_core_inst_fu.csv", "w+");
-  f_core_ldst_u = fopen("runtime_profiling_metrics/energy_consumption/f_core_ldst_u.csv", "w+");
-  f_core_eu = fopen("runtime_profiling_metrics/energy_consumption/f_core_eu.csv", "w+");
-  f_core_idle = fopen("runtime_profiling_metrics/energy_consumption/f_core_idle.csv", "w+");
+  if (new_kernel){
+    fclose(f_core_inst_fu);
+    fclose(f_core_ldst_u);
+    fclose(f_core_eu);
+    fclose(f_core_idle);
+    if (mmu->exist) 
+      fclose(f_core_mem_man_u);
+    if (coredynp.core_ty == OOO) {
+      if (rnu->exist) 
+        fclose(f_core_rnu);
+    }
+  }
+  f_core_inst_fu = NULL;
+  f_core_ldst_u = NULL;
+  f_core_eu = NULL;
+  f_core_idle = NULL;
+  f_core_rnu = NULL;
+  f_core_mem_man_u = NULL;
+  
+  char fname_core_inst_fu[250];
+  char fname_core_ldst_u[250];
+  char fname_core_eu[250];
+  char fname_core_idle[250];
+
+  sprintf(fname_core_inst_fu, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_inst_fu_%d.csv", *kernel_id, ithCore);
+  sprintf(fname_core_ldst_u, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_ldst_u_%d.csv", *kernel_id, ithCore);
+  sprintf(fname_core_eu, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_eu_%d.csv", *kernel_id, ithCore);
+  sprintf(fname_core_idle, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_idle_%d.csv", *kernel_id, ithCore);
+
+  f_core_inst_fu = fopen(fname_core_inst_fu, "w+");
+  f_core_ldst_u = fopen(fname_core_ldst_u, "w+");
+  f_core_eu = fopen(fname_core_eu, "w+");
+  f_core_idle = fopen(fname_core_idle, "w+");
 
   if (!(f_core_inst_fu && f_core_ldst_u && f_core_eu && f_core_idle)) {
-    printf("One of the main Processor csv files to track power consumption cannot be opened among core files\n");
+    printf("One of the main core (SM) csv files to track power consumption cannot be opened\n");
     exit(1);
   }  
-
   fprintf(f_core_inst_fu, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
   fflush(f_core_inst_fu);
-
   fprintf(f_core_ldst_u, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
   fflush(f_core_ldst_u);
-
   fprintf(f_core_eu, "Cycle,Area(mm^2),PeakDynamic(W),PeakDynamicEnergy(W),clockRate(MHz),SubthresholdLeakage(W),"
                      "GateLeakage(W),RunTimeDynamic(W)\n");
   fflush(f_core_eu);
-
   fprintf(f_core_idle, "Cycle,RunTimeDynamic(W)\n");
   fflush(f_core_idle);
+
+  if (mmu->exist){
+    char fname_core_mem_man_u[250];
+    sprintf(fname_core_mem_man_u, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_mem_man_u_%d.csv", *kernel_id, ithCore);
+    f_core_mem_man_u = fopen(fname_core_mem_man_u, "w+");
+    if (!f_core_mem_man_u) {
+      printf("f_core_mem_man_u csv file to track power consumption of memory management unit cannot be opened\n");
+      exit(1);
+    }
+    fprintf(f_core_mem_man_u, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+    fflush(f_core_mem_man_u);
+  }  
+
+  if (coredynp.core_ty == OOO) {
+    if (rnu->exist) {
+      char fname_core_rnu[250];
+      sprintf(fname_core_rnu, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_rnu_%d.csv", *kernel_id, ithCore);
+      f_core_rnu = fopen(fname_core_rnu, "w+");
+      if (!f_core_rnu)
+      {
+        printf("f_core_rnu csv file to track power consumption of renaming unit cannot be opened\n");
+        exit(1);
+      }  
+      fprintf(f_core_rnu, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+      fflush(f_core_rnu);
+    }
+  }
 }
 
 void Core::reopen_folders(unsigned long long cycle){
+
   fclose(f_core_inst_fu);
   fclose(f_core_ldst_u);
   fclose(f_core_eu);
@@ -6180,63 +6241,93 @@ void Core::reopen_folders(unsigned long long cycle){
   f_core_eu = NULL;
   f_core_idle = NULL;
 
+  char fname_core_inst_fu[250];
+  char fname_core_ldst_u[250];
+  char fname_core_eu[250];
+  char fname_core_idle[250];
+
   unsigned seq = cycle / 1000000;
-  char comm[256];
-  sprintf(comm, "runtime_profiling_metrics/energy_consumption/f_core_inst_fu_%u.csv", seq);
-  f_core_inst_fu = fopen(comm, "w+");
+  sprintf(fname_core_inst_fu, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_inst_fu_%d_%d.csv", 
+          *kernel_id, ithCore, seq + 1);
+  sprintf(fname_core_ldst_u, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_ldst_u_%d_%d.csv", 
+          *kernel_id, ithCore, seq + 1);
+  sprintf(fname_core_eu, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_eu_%d_%d.csv", 
+          *kernel_id, ithCore, seq + 1);
+  sprintf(fname_core_idle, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_idle_%d_%d.csv", 
+          *kernel_id, ithCore, seq + 1);
 
-  char comm_2[256];
-  sprintf(comm_2, "runtime_profiling_metrics/energy_consumption/f_core_ldst_u_%u.csv", seq);
-  f_core_ldst_u = fopen(comm_2, "w+");
-
-  char comm_3[256];
-  sprintf(comm_3, "runtime_profiling_metrics/energy_consumption/f_core_eu_%u.csv", seq);
-  f_core_eu = fopen(comm_3, "w+");
-
-  char comm_4[256];
-  sprintf(comm_4, "runtime_profiling_metrics/energy_consumption/f_core_idle_%u.csv", seq);
-  f_core_idle = fopen(comm_4, "w+");
+  f_core_inst_fu = fopen(fname_core_inst_fu, "w+");
+  f_core_ldst_u = fopen(fname_core_ldst_u, "w+");
+  f_core_eu = fopen(fname_core_eu, "w+");
+  f_core_idle = fopen(fname_core_idle, "w+");
 
   if (!(f_core_inst_fu && f_core_ldst_u && f_core_eu && f_core_idle)) {
-    printf("One of the main Processor csv files to track power consumption cannot be opened among core files\n");
+    printf("One of the main core (SM) csv files to track power consumption cannot be opened in reopen folders function\n");
     exit(1);
   }  
 
   fprintf(f_core_inst_fu, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
   fflush(f_core_inst_fu);
-
   fprintf(f_core_ldst_u, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
   fflush(f_core_ldst_u);
-
   fprintf(f_core_eu, "Cycle,Area(mm^2),PeakDynamic(W),PeakDynamicEnergy(W),clockRate(MHz),SubthresholdLeakage(W),"
                      "GateLeakage(W),RunTimeDynamic(W)\n");
   fflush(f_core_eu);
-
   fprintf(f_core_idle, "Cycle,RunTimeDynamic(W)\n");
   fflush(f_core_idle);
+
+  if (mmu->exist){
+    fclose(f_core_mem_man_u);
+    f_core_mem_man_u = NULL;
+    char fname_core_mem_man_u[250];
+    sprintf(fname_core_mem_man_u, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_mem_man_u_%d_%d.csv", 
+            *kernel_id, ithCore, seq + 1);
+    f_core_mem_man_u = fopen(fname_core_mem_man_u, "w+");
+    if (!f_core_mem_man_u) {
+      printf("f_core_mem_man_u csv file to track power consumption of memory management unit in reopen folders cannot be opened\n");
+      exit(1);
+    }
+    fprintf(f_core_mem_man_u, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+    fflush(f_core_mem_man_u);
+  }  
+
+  if (coredynp.core_ty == OOO) {
+    if (rnu->exist) {
+      fclose(f_core_rnu);
+      f_core_rnu = NULL;
+      char fname_core_rnu[250];
+      sprintf(fname_core_rnu, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_rnu_%d_%d.csv", 
+              *kernel_id, ithCore, seq + 1);
+      f_core_rnu = fopen(fname_core_rnu, "w+");
+      if (!f_core_rnu) {
+        printf("f_core_rnu csv file to track power consumption of renaming unit in reopen folders cannot be opened\n");
+        exit(1);
+      }  
+      fprintf(f_core_rnu, "Cycle,Area(mm^2),PeakDynamic(W),SubthresholdLeakage(W),GateLeakage(W),RunTimeDynamic(W)\n");
+      fflush(f_core_rnu);
+    }
+  }
 }
 
-
-void Core::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
+void Core::displayEnergy(uint32_t indent, int plevel, bool is_tdp, bool new_kernel) {
   string indent_str(indent, ' ');
   string indent_str_next(indent + 2, ' ');
   bool long_channel = XML->sys.longer_channel_device;
 
-  if (power_prof_en == false)
+  if (power_prof_en == false || new_kernel)
   {
-    open_folders();
+    open_folders(new_kernel);
     power_prof_en = true;
   }
 
-  if ((*proc_cycle + *proc_tot_cycle) % 1000000 == 0 && (*proc_cycle + *proc_tot_cycle) > 25000)
+  if ((*proc_cycle) % 1000000 == 0 && (*proc_cycle) > 25000)
     reopen_folders(*proc_cycle + *proc_tot_cycle);
 
   if (is_tdp && power_prof_en && (proc_cycle != NULL && proc_tot_cycle != NULL)) 
   {
-    if (ifu->exist) 
-    {
+    if (ifu->exist){
       fprintf(f_core_inst_fu, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
-                     *proc_cycle + *proc_tot_cycle,
+                     *proc_cycle,
                       ifu->area.get_area() * 1e-6,
                       ifu->power.readOp.dynamic * clockRate,
         (long_channel ? ifu->power.readOp.longer_channel_leakage
@@ -6245,13 +6336,11 @@ void Core::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
                       ifu->rt_power.readOp.dynamic / executionTime);
       fflush(f_core_inst_fu);
       //if (plevel > 2) 
-      //{
       //  ifu->displayEnergy(indent + 4, plevel, is_tdp);
-      //}
     }
     if (lsu->exist) {
       fprintf(f_core_ldst_u, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
-                              *proc_cycle + *proc_tot_cycle,
+                              *proc_cycle,
                               lsu->area.get_area() * 1e-6,
                               lsu->power.readOp.dynamic * clockRate,
                         (long_channel ? lsu->power.readOp.longer_channel_leakage
@@ -6259,13 +6348,12 @@ void Core::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
                               lsu->power.readOp.gate_leakage,
                               lsu->rt_power.readOp.dynamic / executionTime);
       fflush(f_core_ldst_u);
-      //if (plevel > 2) {
+      //if (plevel > 2)
       //  lsu->displayEnergy(indent + 4, plevel, is_tdp);
-      //}
     }
     if (exu->exist) {
       fprintf(f_core_eu, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
-                        *proc_cycle + *proc_tot_cycle,
+                        *proc_cycle,
                          exu->area.get_area() * 1e-6,
                          exu->power.readOp.dynamic * clockRate,
                          exu->power.readOp.dynamic,
@@ -6279,10 +6367,38 @@ void Core::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {
       //  exu->displayEnergy(indent + 4, plevel, is_tdp);
       //}
     }
-    //if (XML->sys.Private_L2) {
+    if (coredynp.core_ty == OOO) {
+      if (rnu->exist) {
+        fprintf(f_core_rnu, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
+                           *proc_cycle,
+                            rnu->area.get_area() * 1e-6,
+                            rnu->power.readOp.dynamic * clockRate,
+      (long_channel ? rnu->power.readOp.longer_channel_leakage
+                              : rnu->power.readOp.leakage),
+                            rnu->power.readOp.gate_leakage,
+                            rnu->rt_power.readOp.dynamic / executionTime);
+      fflush(f_core_eu);
+//        if (plevel > 2) 
+//          rnu->displayEnergy(indent + 4, plevel, is_tdp);
+      }
+    }
+    if (mmu->exist) {
+      fprintf(f_core_mem_man_u, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
+                           *proc_cycle,
+                            mmu->area.get_area() * 1e-6,
+                            mmu->power.readOp.dynamic * clockRate,
+          (long_channel ? mmu->power.readOp.longer_channel_leakage
+                            : mmu->power.readOp.leakage),
+                            mmu->power.readOp.gate_leakage,
+                            mmu->rt_power.readOp.dynamic / executionTime);
+//      if (plevel > 2) 
+//        mmu->displayEnergy(indent + 4, plevel, is_tdp);
+    }
+
+    //if (XML->sys.Private_L2) 
     //  l2cache->displayEnergy(4, is_tdp);
-    //}
-    fprintf(f_core_idle, "%llu,%.6lf\n", *proc_cycle + *proc_tot_cycle, IdleCoreEnergy / executionTime);
+
+    fprintf(f_core_idle, "%llu,%.6lf\n", *proc_cycle, IdleCoreEnergy / executionTime);
     fflush(f_core_idle);
   }
 }
@@ -6661,7 +6777,10 @@ void Core::set_core_param() {
            coredynp.num_hthreads, 0);
 }
 
-void Core::set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle){
+void Core::set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle,
+                         unsigned *gpu_kernel_counter)
+{
   proc_cycle = cycle;
   proc_tot_cycle = tot_cycle;
+  kernel_id = gpu_kernel_counter;
 }

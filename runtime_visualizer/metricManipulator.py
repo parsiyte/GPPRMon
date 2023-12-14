@@ -18,21 +18,32 @@ def calculatePlotRatesMetricsMem(l1d_array, l2_array, dram_array):
   result_l1d = np.zeros((l1d_total, 6), dtype = float)
   for i in range(0, l1d_total):
     total_access = 0
-    for j in range(0, 5):
+    total_misses = 0
+    for j in range(0, 6): # hit, hit_res, miss, res_fail, sec_miss, mshr_hit.
+      if j in [0,1,2,3,4]:
         total_access += l1d_array[i][j]
-    for j in range(0, 5):
-      result_l1d[i][j] = float(l1d_array[i][j]) / total_access
-    result_l1d[i][5] = float(l1d_array[i][5] / l1d_array[i][4])
+      if j in [2,4]:
+        total_misses += l1d_array[i][j]
+    for j in range(0, 6):
+      if j != 5:
+        result_l1d[i][j] = float(l1d_array[i][j]) / total_access
+      else:
+        result_l1d[i][j] = float(l1d_array[i][j]) / total_misses
 
   result_l2 = np.zeros((l2_total, 6), dtype = float)
   for i in range(0, l2_total):
     total_access = 0
-    for j in range(0, 5):
+    total_misses = 0
+    for j in range(0, 6): # hit, hit_res, miss, res_fail, sec_miss, mshr_hit.
+      if j in [0,1,2,3,4]:
         total_access += l2_array[i][j]
-
-    for j in range(0, 5):
-      result_l2[i][j] = float(l2_array[i][j]) / total_access
-    result_l2[i][5] = float(l2_array[i][5] / l2_array[i][4])
+      if j in [2,4]:
+        total_misses += l2_array[i][j]
+    for j in range(0, 6):
+      if j != 5:
+        result_l2[i][j] = float(l2_array[i][j]) / total_access
+      else:
+        result_l2[i][j] = float(l2_array[i][j]) / total_misses
 
   result_dram = np.zeros((dram_total, 2), dtype = float)
   for i in range(0, dram_total):
@@ -41,7 +52,6 @@ def calculatePlotRatesMetricsMem(l1d_array, l2_array, dram_array):
       total_access += dram_array[i][j]
     for j in range(0, 2):
       result_dram[i][j] = float(dram_array[i][j]) / total_access
-
   return result_l1d, result_l2, result_dram
 
 def calculatePlotRatesMetricsPower(metrics, core, mem, gpu):

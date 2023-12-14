@@ -40,6 +40,7 @@ enum mem_stage_access_type {
   N_MEM_STAGE_ACCESS_TYPE
 };
 enum tlb_request_status { TLB_HIT = 0, TLB_READY, TLB_PENDING };
+
 enum mem_stage_stall_type {
   NO_RC_FAIL = 0,
   BK_CONF,

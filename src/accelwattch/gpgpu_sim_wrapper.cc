@@ -79,7 +79,9 @@ enum pwr_cmp_t {
 gpgpu_sim_wrapper::gpgpu_sim_wrapper(bool power_simulation_enabled,
                                      char* xmlfile, int power_simulation_mode, 
                                      bool dvfs_enabled, unsigned long long *cycle,
-                                     unsigned long long *tot_cycle) {
+                                     unsigned long long *tot_cycle,
+                                     unsigned *gpu_kernel_counter) {
+  kernel_id = gpu_kernel_counter;
   m_cycle = cycle;
   m_tot_cycle = tot_cycle;
 
@@ -128,7 +130,7 @@ gpgpu_sim_wrapper::gpgpu_sim_wrapper(bool power_simulation_enabled,
   if (g_power_simulation_enabled) {
     p->parse(xml_filename);
   }
-  proc = new Processor(p, m_cycle, m_tot_cycle);
+  proc = new Processor(p, m_cycle, m_tot_cycle, kernel_id);
   power_trace_file = NULL;
   metric_trace_file = NULL;
   steady_state_tacking_file = NULL;

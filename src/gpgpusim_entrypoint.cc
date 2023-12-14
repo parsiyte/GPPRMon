@@ -70,6 +70,7 @@ void *gpgpu_sim_thread_sequential(void *ctx_ptr) {
 static void termination_callback() {
   printf("GPGPU-Sim: *** exit detected ***\n");
   fflush(stdout);
+  exit(1);
 }
 
 void *gpgpu_sim_thread_concurrent(void *ctx_ptr) {

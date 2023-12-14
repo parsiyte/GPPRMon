@@ -2064,6 +2064,7 @@ class shader_core_ctx : public core_t {
   }
   kernel_info_t *get_kernel() { return m_kernel; }
   unsigned get_sid() const { return m_sid; }
+  unsigned get_cluster_id() { return m_tpc; }
 
   // used by functional simulation:
   // modifiers
@@ -2086,7 +2087,7 @@ class shader_core_ctx : public core_t {
   void store_ack(class mem_fetch *mf);
   bool warp_waiting_at_mem_barrier(unsigned warp_id);
   void set_max_cta(const kernel_info_t &kernel);
-  void warp_inst_complete(const warp_inst_t &inst);
+  void warp_inst_complete(warp_inst_t &inst);
 
   // accessors
   std::list<unsigned> get_regs_written(const inst_t &fvt) const;
@@ -2424,6 +2425,7 @@ class shader_core_ctx : public core_t {
   unsigned m_sid;  // shader id
   unsigned m_tpc;  // texture processor cluster id (aka, node id when using
                    // interconnect concentration)
+
   const shader_core_config *m_config;
   const memory_config *m_memory_config;
   class simt_core_cluster *m_cluster;

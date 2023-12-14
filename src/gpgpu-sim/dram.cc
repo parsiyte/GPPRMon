@@ -255,11 +255,13 @@ void dram_t::push(class mem_fetch *data)
 {
   // Ensure request is in correct memory partition
   assert(id == data->get_tlx_addr().chip);  
+
   dram_req_t *mrq = new dram_req_t(data, m_config->nbk, m_config->dram_bnk_indexing_policy,
                      m_memory_partition_unit->get_mgpu());
 
   data->set_status(IN_PARTITION_MC_INTERFACE_QUEUE,
                    m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle);
+
   mrqq->push(mrq);
 
   // stats...
@@ -302,9 +304,11 @@ void dram_t::scheduler_fifo()
 
 void dram_t::cycle() 
 {
-  if (!returnq->full()) {
+  if (!returnq->full()) 
+  {
     dram_req_t *cmd = rwq->pop();
-    if (cmd) {
+    if (cmd) 
+    {
 #ifdef DRAM_VIEWCMD
       printf("\tDQ: BK%d Row:%03x Col:%03x", cmd->bk, cmd->row,
              cmd->col + cmd->dqbytes);
@@ -319,7 +323,8 @@ void dram_t::cycle()
             data->get_access_type() != L2_WRBK_ACC) {
           data->set_reply();
           returnq->push(data);
-        } else {
+        } 
+        else {
           m_memory_partition_unit->set_done(data);
           delete data;
         }
@@ -333,7 +338,6 @@ void dram_t::cycle()
 
   /* check if the upcoming request is on an idle bank */
   /* Should we modify this so that multiple requests are checked? */
-
   switch (m_config->scheduler_type) {
     case DRAM_FIFO:
       scheduler_fifo();
@@ -345,6 +349,7 @@ void dram_t::cycle()
       printf("Error: Unknown DRAM scheduler type\n");
       assert(0);
   }
+
   if (m_config->scheduler_type == DRAM_FRFCFS) {
     unsigned nreqs = m_frfcfs_scheduler->num_pending();
     if (nreqs > max_mrqs) {
@@ -352,7 +357,8 @@ void dram_t::cycle()
     }
     ave_mrqs += nreqs;
     ave_mrqs_partial += nreqs;
-  } else {
+  } 
+  else {
     if (mrqq->get_length() > max_mrqs) {
       max_mrqs = mrqq->get_length();
     }
@@ -369,40 +375,45 @@ void dram_t::cycle()
   for (unsigned i = 0; i < m_config->nbk; i++) {
     if (bk[i]->mrq) memory_pending++;
   }
+
   banks_1time += memory_pending;
-  if (memory_pending > 0) banks_acess_total++;
+  if (memory_pending > 0) 
+    banks_acess_total++;
 
   unsigned int memory_pending_rw = 0;
   unsigned read_blp_rw = 0;
   unsigned write_blp_rw = 0;
   std::bitset<8> bnkgrp_rw_found;  // assume max we have 8 bank groups
 
-  for (unsigned j = 0; j < m_config->nbk; j++) {
+  for (unsigned j = 0; j < m_config->nbk; j++) 
+  {
     unsigned grp = get_bankgrp_number(j);
-    if (bk[j]->mrq &&
-        (((bk[j]->curr_row == bk[j]->mrq->row) && (bk[j]->mrq->rw == READ) &&
-          (bk[j]->state == BANK_ACTIVE)))) {
+    if (bk[j]->mrq && (((bk[j]->curr_row == bk[j]->mrq->row) && (bk[j]->mrq->rw == READ) &&
+          (bk[j]->state == BANK_ACTIVE)))) 
+    {
       memory_pending_rw++;
       read_blp_rw++;
       bnkgrp_rw_found.set(grp);
-    } else if (bk[j]->mrq &&
-               (((bk[j]->curr_row == bk[j]->mrq->row) &&
-                 (bk[j]->mrq->rw == WRITE) && (bk[j]->state == BANK_ACTIVE)))) {
+    } 
+    else if (bk[j]->mrq && (((bk[j]->curr_row == bk[j]->mrq->row) &&
+            (bk[j]->mrq->rw == WRITE) && (bk[j]->state == BANK_ACTIVE)))) 
+    {
       memory_pending_rw++;
       write_blp_rw++;
       bnkgrp_rw_found.set(grp);
     }
   }
+
   banks_time_rw += memory_pending_rw;
   bkgrp_parallsim_rw += bnkgrp_rw_found.count();
   if (memory_pending_rw > 0) {
-    write_to_read_ratio_blp_rw_average +=
-        (double)write_blp_rw / (write_blp_rw + read_blp_rw);
+    write_to_read_ratio_blp_rw_average += (double)write_blp_rw / (write_blp_rw + read_blp_rw);
     banks_access_rw_total++;
   }
 
   unsigned int memory_Pending_ready = 0;
-  for (unsigned j = 0; j < m_config->nbk; j++) {
+  for (unsigned j = 0; j < m_config->nbk; j++) 
+  {
     unsigned grp = get_bankgrp_number(j);
     if (bk[j]->mrq &&
         ((!CCDc && !bk[j]->RCDc && !(bkgrp[grp]->CCDLc) &&
@@ -410,45 +421,58 @@ void dram_t::cycle()
           (WTRc == 0) && (bk[j]->state == BANK_ACTIVE) && !rwq->full()) ||
          (!CCDc && !bk[j]->RCDWRc && !(bkgrp[grp]->CCDLc) &&
           (bk[j]->curr_row == bk[j]->mrq->row) && (bk[j]->mrq->rw == WRITE) &&
-          (RTWc == 0) && (bk[j]->state == BANK_ACTIVE) && !rwq->full()))) {
+          (RTWc == 0) && (bk[j]->state == BANK_ACTIVE) && !rwq->full()))) 
+    {
       memory_Pending_ready++;
     }
   }
+
   banks_time_ready += memory_Pending_ready;
-  if (memory_Pending_ready > 0) banks_access_ready_total++;
+  if (memory_Pending_ready > 0) 
+    banks_access_ready_total++;
   ///////////////////////////////////////////////////////////////////////////////////
 
   bool issued_col_cmd = false;
   bool issued_row_cmd = false;
 
-  if (m_config->dual_bus_interface) {
+  if (m_config->dual_bus_interface) 
+  {
     // dual bus interface
     // issue one row command and one column command
     for (unsigned i = 0; i < m_config->nbk; i++) {
       unsigned j = (i + prio) % m_config->nbk;
       issued_col_cmd = issue_col_command(j);
-      if (issued_col_cmd) break;
+      if (issued_col_cmd) 
+        break;
     }
+
     for (unsigned i = 0; i < m_config->nbk; i++) {
       unsigned j = (i + prio) % m_config->nbk;
       issued_row_cmd = issue_row_command(j);
-      if (issued_row_cmd) break;
+      if (issued_row_cmd) 
+        break;
     }
-    for (unsigned i = 0; i < m_config->nbk; i++) {
+
+    for (unsigned i = 0; i < m_config->nbk; i++)  {
       unsigned j = (i + prio) % m_config->nbk;
-      if (!bk[j]->mrq) {
+      if (!bk[j]->mrq) 
+      {
         if (!CCDc && !RRDc && !RTWc && !WTRc && !bk[j]->RCDc && !bk[j]->RASc &&
             !bk[j]->RCc && !bk[j]->RPc && !bk[j]->RCDWRc)
           k--;
         bk[j]->n_idle++;
       }
     }
-  } else {
+  } 
+  else 
+  {
     // single bus interface
     // issue only one row/column command
-    for (unsigned i = 0; i < m_config->nbk; i++) {
+    for (unsigned i = 0; i < m_config->nbk; i++) 
+    {
       unsigned j = (i + prio) % m_config->nbk;
-      if (!issued_col_cmd) issued_col_cmd = issue_col_command(j);
+      if (!issued_col_cmd) 
+        issued_col_cmd = issue_col_command(j);
 
       if (!issued_col_cmd && !issued_row_cmd)
         issued_row_cmd = issue_row_command(j);
@@ -463,7 +487,8 @@ void dram_t::cycle()
   }
 
   issued = issued_row_cmd || issued_col_cmd;
-  if (!issued) {
+  if (!issued) 
+  {
     n_nop++;
     n_nop_partial++;
 #ifdef DRAM_VIEWCMD
@@ -480,8 +505,11 @@ void dram_t::cycle()
     issued_total++;
     if (issued_col_cmd && issued_row_cmd) issued_two++;
   }
-  if (issued_col_cmd) issued_total_col++;
-  if (issued_row_cmd) issued_total_row++;
+
+  if (issued_col_cmd) 
+    issued_total_col++;
+  if (issued_row_cmd) 
+    issued_total_row++;
 
   // Collect some statistics
   // check the limitation, see where BW is wasted?
@@ -490,7 +518,9 @@ void dram_t::cycle()
   for (unsigned i = 0; i < m_config->nbk; i++) {
     if (bk[i]->mrq) memory_pending_found++;
   }
-  if (memory_pending_found > 0) banks_acess_total_after++;
+
+  if (memory_pending_found > 0) 
+    banks_acess_total_after++;
 
   bool memory_pending_rw_found = false;
   for (unsigned j = 0; j < m_config->nbk; j++) {

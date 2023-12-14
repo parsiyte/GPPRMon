@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
   // parse XML-based interface
   ParseXML *p1 = new ParseXML();
   p1->parse(fb);
-  Processor proc(p1, NULL, NULL);
+  Processor proc(p1, NULL, NULL, NULL);
   proc.displayEnergy(2, plevel);
   delete p1;
   return 0;

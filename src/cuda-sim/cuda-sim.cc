@@ -1761,7 +1761,8 @@ int tensorcore_op(int inst_opcode) {
   else
     return 0;
 }
-void ptx_thread_info::ptx_exec_inst(warp_inst_t &inst, unsigned lane_id) {
+void ptx_thread_info::ptx_exec_inst(warp_inst_t &inst, unsigned lane_id) 
+{
   bool skip = false;
   int op_classification = 0;
   addr_t pc = next_instr();
@@ -1769,6 +1770,47 @@ void ptx_thread_info::ptx_exec_inst(warp_inst_t &inst, unsigned lane_id) {
          inst.pc);  // make sure timing model and functional model are in sync
   const ptx_instruction *pI = m_func_info->get_instruction(pc);
 
+  if (this->get_gpu()->getMemoryConfig()->mem_metric_collection && 
+      this->get_gpu()->get_config().m_mem_profiler_config.m_inst_monitor) 
+  {
+    inst.issued_instructions.set(lane_id, true);
+    if (inst.issued_instructions.count() == 32){
+      char *instruction = (char *) malloc(sizeof(char) * (strlen(pI->to_string().c_str()) + 1));
+      char *instruction_2 = (char *) malloc(sizeof(char) * (strlen(pI->to_string().c_str() + 1)));
+      if (!(instruction && instruction_2)) {
+        printf("Error while obtaining the instruction streams");
+        exit(1);
+      }
+      strcpy(instruction, pI->to_string().c_str());
+
+      unsigned nfii = strlen(pI->to_string().c_str()) + 1;
+      unsigned j = 0;
+      for (int i = 0; i < nfii; i++){
+        if (instruction[i] == ',' || instruction[i] == ';')
+          continue;
+        else {
+          instruction_2[j] = instruction[i];
+          ++j;
+        }      
+      }
+      free(instruction);
+
+      fprintf(this->get_gpu()->m_mem_profiler->instruction_mon_before[inst.m_core_id], 
+              "%llu,%s,%u,%u,%u,%x\n",
+              this->get_gpu()->gpu_sim_cycle,
+              instruction_2,
+              inst.m_ctaid,
+              inst.m_core_id,
+              inst.warp_id(),
+              inst.issued_instructions.to_ulong());
+      fflush(this->get_gpu()->m_mem_profiler->instruction_mon_before[inst.m_core_id]);
+
+      if (inst.issued_instructions.count() == 1){
+        strcpy(inst.inst_string, instruction_2);        
+      }
+      free(instruction_2);
+    }
+  }
   set_npc(pc + pI->inst_size());
 
   try {

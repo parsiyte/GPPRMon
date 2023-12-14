@@ -1256,12 +1256,14 @@ class baseline_cache : public cache_t {
  public:
   baseline_cache(const char *name, cache_config &config, int core_id,
                  int type_id, mem_fetch_interface *memport,
-                 enum mem_fetch_status status)
+                 enum mem_fetch_status status, class gpgpu_sim *gpu)
       : m_config(config),
         m_tag_array(new tag_array(config, core_id, type_id)),
         m_mshrs(config.m_mshr_entries, config.m_mshr_max_merge),
-        m_bandwidth_management(config) {
+        m_bandwidth_management(config)
+  {
     init(name, config, memport, status);
+    m_gpu = gpu;
   }
 
   void init(const char *name, const cache_config &config,
@@ -1271,6 +1273,8 @@ class baseline_cache : public cache_t {
     m_memport = memport;
     m_miss_queue_status = status;
   }
+
+  class gpgpu_sim *m_gpu;
 
   virtual ~baseline_cache() { delete m_tag_array; }
 
@@ -1326,7 +1330,8 @@ class baseline_cache : public cache_t {
   bool data_port_free() const {
     return m_bandwidth_management.data_port_free();
   }
-  bool fill_port_free() const {
+  bool fill_port_free() const 
+  {
     return m_bandwidth_management.fill_port_free();
   }
 
@@ -1344,12 +1349,15 @@ class baseline_cache : public cache_t {
   // Constructor that can be used by derived classes with custom tag arrays
   baseline_cache(const char *name, cache_config &config, int core_id,
                  int type_id, mem_fetch_interface *memport,
-                 enum mem_fetch_status status, tag_array *new_tag_array)
+                 enum mem_fetch_status status, tag_array *new_tag_array, 
+                 class gpgpu_sim *gpu)
       : m_config(config),
         m_tag_array(new_tag_array),
         m_mshrs(config.m_mshr_entries, config.m_mshr_max_merge),
-        m_bandwidth_management(config) {
+        m_bandwidth_management(config) 
+  {
     init(name, config, memport, status);
+    m_gpu = gpu;
   }
 
  protected:
@@ -1400,13 +1408,14 @@ class baseline_cache : public cache_t {
   void send_read_request(new_addr_type addr, new_addr_type block_addr,
                          unsigned cache_index, mem_fetch *mf, unsigned time,
                          bool &do_miss, std::list<cache_event> &events,
-                         bool read_only, bool wa);
+                         bool read_only, bool wa, bool l1d, bool l2);
+
   /// Read miss handler. Check MSHR hit or MSHR available
   void send_read_request(new_addr_type addr, new_addr_type block_addr,
                          unsigned cache_index, mem_fetch *mf, unsigned time,
                          bool &do_miss, bool &wb, evicted_block_info &evicted,
                          std::list<cache_event> &events, bool read_only,
-                         bool wa);
+                         bool wa, bool l1d, bool l2);
 
   /// Sub-class containing all metadata for port bandwidth management
   class bandwidth_management {
@@ -1447,7 +1456,7 @@ class read_only_cache : public baseline_cache {
   read_only_cache(const char *name, cache_config &config, int core_id,
                   int type_id, mem_fetch_interface *memport,
                   enum mem_fetch_status status)
-      : baseline_cache(name, config, core_id, type_id, memport, status) {}
+      : baseline_cache(name, config, core_id, type_id, memport, status, NULL) {}
 
   /// Access cache for read_only_cache: returns RESERVATION_FAIL if request
   /// could not be accepted (for any reason)
@@ -1463,7 +1472,7 @@ class read_only_cache : public baseline_cache {
                   int type_id, mem_fetch_interface *memport,
                   enum mem_fetch_status status, tag_array *new_tag_array)
       : baseline_cache(name, config, core_id, type_id, memport, status,
-                       new_tag_array) {}
+                       new_tag_array, NULL) {}
 };
 
 /// Data cache - Implements common functions for L1 and L2 data cache
@@ -1473,7 +1482,7 @@ class data_cache : public baseline_cache {
              mem_fetch_interface *memport, mem_fetch_allocator *mfcreator,
              enum mem_fetch_status status, mem_access_type wr_alloc_type,
              mem_access_type wrbk_type, class gpgpu_sim *gpu)
-      : baseline_cache(name, config, core_id, type_id, memport, status) {
+      : baseline_cache(name, config, core_id, type_id, memport, status, gpu) {
     init(mfcreator);
     m_wr_alloc_type = wr_alloc_type;
     m_wrbk_type = wrbk_type;
@@ -1548,7 +1557,7 @@ class data_cache : public baseline_cache {
              mem_access_type wr_alloc_type, mem_access_type wrbk_type,
              class gpgpu_sim *gpu)
       : baseline_cache(name, config, core_id, type_id, memport, status,
-                       new_tag_array) {
+                       new_tag_array, gpu) {
     init(mfcreator);
     m_wr_alloc_type = wr_alloc_type;
     m_wrbk_type = wrbk_type;
@@ -1569,7 +1578,8 @@ class data_cache : public baseline_cache {
                                               new_addr_type addr,
                                               unsigned cache_index,
                                               mem_fetch *mf, unsigned time,
-                                              std::list<cache_event> &events);
+                                              std::list<cache_event> &events,
+                                              bool l1d, bool l2);
 
  protected:
   mem_fetch_allocator *m_memfetch_creator;
@@ -1581,80 +1591,96 @@ class data_cache : public baseline_cache {
   void update_m_readable(mem_fetch *mf, unsigned cache_index);
   // Member Function pointers - Set by configuration options
   // to the functions below each grouping
+
   /******* Write-hit configs *******/
   enum cache_request_status (data_cache::*m_wr_hit)(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
-      std::list<cache_event> &events, enum cache_request_status status);
+      std::list<cache_event> &events, enum cache_request_status status,
+      bool l1d, bool l2);
+
   /// Marks block as MODIFIED and updates block LRU
   enum cache_request_status wr_hit_wb(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
       std::list<cache_event> &events,
-      enum cache_request_status status);  // write-back
+      enum cache_request_status status,  // write-back
+      bool l1d, bool l2);
+
   enum cache_request_status wr_hit_wt(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
       std::list<cache_event> &events,
-      enum cache_request_status status);  // write-through
+      enum cache_request_status status,  // write-through
+      bool l1d, bool l2);
 
   /// Marks block as INVALID and sends write request to lower level memory
   enum cache_request_status wr_hit_we(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
       std::list<cache_event> &events,
-      enum cache_request_status status);  // write-evict
+      enum cache_request_status status,  // write-evict
+      bool l1d, bool l2);
+
   enum cache_request_status wr_hit_global_we_local_wb(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
-      std::list<cache_event> &events, enum cache_request_status status);
-  // global write-evict, local write-back
+      std::list<cache_event> &events, enum cache_request_status status,     // global write-evict, local write-back
+      bool l1d, bool l2);
 
   /******* Write-miss configs *******/
   enum cache_request_status (data_cache::*m_wr_miss)(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
-      std::list<cache_event> &events, enum cache_request_status status);
+      std::list<cache_event> &events, enum cache_request_status status,
+      bool l1d, bool l2);
   /// Sends read request, and possible write-back request,
   //  to lower level memory for a write miss with write-allocate
   enum cache_request_status wr_miss_wa_naive(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
       std::list<cache_event> &events,
-      enum cache_request_status
-          status);  // write-allocate-send-write-and-read-request
+      enum cache_request_status status,   // write-allocate-send-write-and-read-request
+      bool l1d, bool l2);
   enum cache_request_status wr_miss_wa_fetch_on_write(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
       std::list<cache_event> &events,
-      enum cache_request_status
-          status);  // write-allocate with fetch-on-every-write
+      enum cache_request_status status,   // write-allocate with fetch-on-every-write
+      bool l1d, bool l2);
   enum cache_request_status wr_miss_wa_lazy_fetch_on_read(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
       std::list<cache_event> &events,
-      enum cache_request_status status);  // write-allocate with read-fetch-only
+      enum cache_request_status status,  // write-allocate with read-fetch-only
+      bool l1d, bool l2); 
   enum cache_request_status wr_miss_wa_write_validate(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
       std::list<cache_event> &events,
-      enum cache_request_status
-          status);  // write-allocate that writes with no read fetch
+      enum cache_request_status status, // write-allocate that writes with no read fetch
+      bool l1d, bool l2);  
   enum cache_request_status wr_miss_no_wa(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
       std::list<cache_event> &events,
-      enum cache_request_status status);  // no write-allocate
+      enum cache_request_status status,  // no write-allocate
+      bool l1d, bool l2);  
 
   // Currently no separate functions for reads
   /******* Read-hit configs *******/
   enum cache_request_status (data_cache::*m_rd_hit)(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
-      std::list<cache_event> &events, enum cache_request_status status);
+      std::list<cache_event> &events, enum cache_request_status status,
+      bool l1d, bool l2);
+
   enum cache_request_status rd_hit_base(new_addr_type addr,
                                         unsigned cache_index, mem_fetch *mf,
                                         unsigned time,
                                         std::list<cache_event> &events,
-                                        enum cache_request_status status);
+                                        enum cache_request_status status,
+                                        bool l1d, bool l2);
 
   /******* Read-miss configs *******/
   enum cache_request_status (data_cache::*m_rd_miss)(
       new_addr_type addr, unsigned cache_index, mem_fetch *mf, unsigned time,
-      std::list<cache_event> &events, enum cache_request_status status);
+      std::list<cache_event> &events, enum cache_request_status status,
+      bool l1d, bool l2);
   enum cache_request_status rd_miss_base(new_addr_type addr,
                                          unsigned cache_index, mem_fetch *mf,
                                          unsigned time,
                                          std::list<cache_event> &events,
-                                         enum cache_request_status status);
+                                         enum cache_request_status status, 
+                                         bool l1d, bool l2);
 };
 
 /// This is meant to model the first level data cache in Fermi.

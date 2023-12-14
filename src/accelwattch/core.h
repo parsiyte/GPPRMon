@@ -124,11 +124,11 @@ class SchedulerU : public Component {
              bool exist_ = true);
   void computeEnergy(bool is_tdp = true);
   void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
-  FILE *f_core_eu_inst_sch_inst_window;
-  FILE *f_core_eu_inst_sch_int_alus;
-  FILE *f_core_eu_inst_sch_fp_u;
-  FILE *f_core_eu_inst_sch_complex_alus;
-  FILE *f_core_eu_inst_sch_res_broad_bus;
+//  FILE *f_core_eu_inst_sch_inst_window;
+//  FILE *f_core_eu_inst_sch_int_alus;
+//  FILE *f_core_eu_inst_sch_fp_u;
+//  FILE *f_core_eu_inst_sch_complex_alus;
+//  FILE *f_core_eu_inst_sch_res_broad_bus;
   ~SchedulerU();
 };
 
@@ -187,11 +187,11 @@ class LoadStoreU : public Component {
   void displayDeviceType(int device_type_,
                          uint32_t indent);  // Added by Syed Gilani
 
-  FILE *f_core_ldst_u_shmem;
-  FILE *f_core_ldst_u_data_cache;
-  FILE *f_core_ldst_u_const_cache;
-  FILE *f_core_ldst_u_text_cache;
-  FILE *f_core_ldst_u_queue;
+//  FILE *f_core_ldst_u_shmem;
+//  FILE *f_core_ldst_u_data_cache;
+//  FILE *f_core_ldst_u_const_cache;
+//  FILE *f_core_ldst_u_text_cache;
+//  FILE *f_core_ldst_u_queue;
   ~LoadStoreU();
 };
 
@@ -305,7 +305,7 @@ class Core : public Component {
        unsigned long long *cycle, unsigned long long *tot_cycle);
   void set_core_param();
   void computeEnergy(bool is_tdp = true);
-  void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
+  void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true, bool new_kernel = false);
 
   float get_coefficient_icache_hits() {
     // return 1.5*ifu->icache.caches->local_result.power.readOp.dynamic;
@@ -572,20 +572,27 @@ class Core : public Component {
   }
 
   void compute();
+
+  void open_folders(bool new_kernel);
+  void reopen_folders(unsigned long long cycle);
+  void set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle, 
+                     unsigned *gpu_kernel_counter);
+
   unsigned long long *proc_cycle;
   unsigned long long *proc_tot_cycle;
-
-  void open_folders();
-  void reopen_folders(unsigned long long cycle);
-  void set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle);
-
+  unsigned *kernel_id;
   bool power_prof_en;
 
-  FILE *f_core_inst_fu;
-  FILE *f_core_ldst_u;
-  FILE *f_core_eu;
-  FILE *f_core_idle;
+  FILE *f_core_inst_fu;            //instruction fetch unit
+  FILE *f_core_ldst_u;             //load store unit
+  FILE *f_core_mem_man_u;          //memory management unit
+  FILE *f_core_eu;                 //execution unit
+  FILE *f_core_uni_diff_core;      //unidiff core
+  FILE *f_core_rnu;                //renaming unit
+  FILE *f_core_pipe;               //pipeline  
+  FILE *f_core_idle;               //core's idle power cons.
   ~Core();
 };
 
 #endif /* CORE_H_ */
+

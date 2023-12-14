@@ -191,8 +191,9 @@ def plot(l1d, l2, dram, core, mem, gpu, arch, kernel, cta_iss, cta_comp, cluster
       image_draw_memory = plot_TITANX(image_draw_memory, l1d, l2, dram, kernel, int_start, int_finish, l1d_rgb, l2_rgb, dram_rgb, power_mem)
     elif arch == 'TITANV': #volta
       image_draw_memory = plot_TITANV(image_draw_memory, l1d, l2, dram, kernel, int_start, int_finish, l1d_rgb, l2_rgb, dram_rgb, power_mem)
-    elif arch == 'GV100': #volta
-      image_draw_memory = plot_GV100(image_draw_memory, l1d, l2, dram, kernel, int_start, int_finish, l1d_rgb, l2_rgb, dram_rgb, power_mem)
+    elif arch == 'GV100' or arch == 'V100' or arch == "JetsonAGXXavier" or arch == "XavierNX": #volta
+      image_draw_memory = plot_GV100(image_draw_memory, l1d, l2, dram, kernel, int_start, 
+                  int_finish, l1d_rgb, l2_rgb, dram_rgb, power_mem, arch)
     elif arch == 'RTX2060': # turing
       image_draw_memory = plot_RTX2060(image_draw_memory, l1d, l2, dram, kernel, int_start, int_finish, l1d_rgb, l2_rgb, dram_rgb, power_mem)
     elif arch == 'RTX2060S': #turing
