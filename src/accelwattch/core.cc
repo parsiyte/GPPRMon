@@ -356,10 +356,7 @@ InstFetchU::InstFetchU(ParseXML* XML_interface, int ithCore_,
     assoc = XML->sys.core[ithCore].BTB.BTB_config[2];
     banks = XML->sys.core[ithCore].BTB.BTB_config[3];
     idx = debug ? 9 : int(ceil(log2(size / line / assoc)));
-    //    	  tag							   =
-    //    debug?51:XML->sys.virtual_address_width-idx-int(ceil(log2(line))) +
-    //    int(ceil(log2(XML->sys.core[ithCore].number_hardware_threads)))
-    //    +EXTRA_TAG_BITS;
+
     tag = debug ? 51
                 : XML->sys.virtual_address_width +
                       int(ceil(log2(
@@ -6158,24 +6155,22 @@ void Core::open_folders(bool new_kernel)
     fclose(f_core_ldst_u);
     fclose(f_core_eu);
     fclose(f_core_idle);
-    if (mmu->exist) 
-      fclose(f_core_mem_man_u);
-    if (coredynp.core_ty == OOO) {
-      if (rnu->exist) 
-        fclose(f_core_rnu);
-    }
   }
   f_core_inst_fu = NULL;
   f_core_ldst_u = NULL;
   f_core_eu = NULL;
   f_core_idle = NULL;
-  f_core_rnu = NULL;
-  f_core_mem_man_u = NULL;
   
   char fname_core_inst_fu[250];
   char fname_core_ldst_u[250];
   char fname_core_eu[250];
   char fname_core_idle[250];
+
+//  if (kernel_id){
+//    printf("kernel_id = %d\n", *kernel_id);
+//  } else{
+//    printf("kernel_id is not defined!!!\n");
+//  }
 
   sprintf(fname_core_inst_fu, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_inst_fu_%d.csv", *kernel_id, ithCore);
   sprintf(fname_core_ldst_u, "runtime_profiling_metrics/energy_consumption/kernel_%d/f_core_ldst_u_%d.csv", *kernel_id, ithCore);
@@ -6314,8 +6309,7 @@ void Core::displayEnergy(uint32_t indent, int plevel, bool is_tdp, bool new_kern
   string indent_str_next(indent + 2, ' ');
   bool long_channel = XML->sys.longer_channel_device;
 
-  if (power_prof_en == false || new_kernel)
-  {
+  if (power_prof_en == false || new_kernel) {
     open_folders(new_kernel);
     power_prof_en = true;
   }
@@ -6778,9 +6772,9 @@ void Core::set_core_param() {
 }
 
 void Core::set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle,
-                         unsigned *gpu_kernel_counter)
-{
+                         unsigned *gpu_kernel_counter, unsigned core_id) {
   proc_cycle = cycle;
   proc_tot_cycle = tot_cycle;
   kernel_id = gpu_kernel_counter;
+//  printf("core_id = %d\n", core_id);
 }

@@ -64,6 +64,9 @@ void ParseXML::parse(char* filepath) {
   char chtmp[60];
   char chtmp1[60];
   chtmp1[0] = '\0';
+
+  // printf("%s\n", filepath);
+
   // this open and parse the XML file:
   XMLNode xMainNode = XMLNode::openFileHelper(
       filepath, "component");  // the 'component' in the first layer

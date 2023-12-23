@@ -145,7 +145,6 @@ struct power_config {
   bool g_power_trace_enabled;
   bool g_steady_power_levels_enabled;
   bool g_power_per_cycle_dump;
-  bool g_power_simulator_debug;
   char *g_power_filename;
   char *g_power_trace_filename;
   char *g_metric_trace_filename;

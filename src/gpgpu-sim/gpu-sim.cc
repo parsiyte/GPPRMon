@@ -2161,6 +2161,7 @@ void gpgpu_sim::cycle()
                     gpu_tot_sim_cycle, gpu_sim_cycle, gpu_tot_sim_insn,
                     gpu_sim_insn, m_config.g_dvfs_enabled);
       }
+      //printf("ASDKŞASKDŞASDssss\n");
     }
 #endif
 

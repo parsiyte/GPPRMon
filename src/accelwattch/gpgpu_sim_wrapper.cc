@@ -161,8 +161,7 @@ void gpgpu_sim_wrapper::init_mcpat(
     bool power_per_cycle_dump, double steady_power_deviation,
     double steady_min_period, int zlevel, double init_val,
     int stat_sample_freq, int power_sim_mode, bool dvfs_enabled,
-    unsigned clock_freq, unsigned num_shaders) 
-{
+    unsigned clock_freq, unsigned num_shaders) {
   // Write File Headers for (-metrics trace, -power trace)
 
   reset_counters();
@@ -862,7 +861,6 @@ double gpgpu_sim_wrapper::calculate_static_power(){
 
 void gpgpu_sim_wrapper::update_components_power()
 {
-
   update_coefficients();
 
   proc_power=proc->rt_power.readOp.dynamic;

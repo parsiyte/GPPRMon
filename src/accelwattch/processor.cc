@@ -85,6 +85,7 @@ Processor::Processor(ParseXML *XML_interface, unsigned long long *cycle, unsigne
   l2_power = 0;
   idle_core_power = 0;
   set_proc_param();
+
   if (procdynp.homoCore)
     numCore = procdynp.numCore == 0 ? 0 : 1;
   else
@@ -934,8 +935,8 @@ void Processor::displayEnergy(uint32_t indent, int plevel, bool is_tdp_parm)
   bool is_tdp = is_tdp_parm;
 
   bool new_kernel = (old_kernel != *kernel_id) ? 1 : 0;
-  if ((proc_cycle != NULL  && power_prof_en == false) || new_kernel)
-  {
+
+  if ((proc_cycle != NULL  && power_prof_en == false) || new_kernel) {
 //    printf("This is new kernel = %d\n", new_kernel);
     open_folders(new_kernel);
     power_prof_en = true;
@@ -944,8 +945,7 @@ void Processor::displayEnergy(uint32_t indent, int plevel, bool is_tdp_parm)
   if ((*proc_cycle) % 1000000 == 0 && (*proc_cycle) > 25000)
     reopen_folders(*proc_cycle);
 
-  if (is_tdp_parm && power_prof_en && (proc_cycle != NULL && proc_tot_cycle != NULL)) 
-  {
+  if (is_tdp_parm && power_prof_en && (proc_cycle != NULL && proc_tot_cycle != NULL)) {
     //displayInterconnectType(XML->sys.interconnect_projection_type, indent);
     fprintf(f_processor, "%llu,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf\n",
                           *proc_cycle,
@@ -1017,8 +1017,8 @@ void Processor::displayEnergy(uint32_t indent, int plevel, bool is_tdp_parm)
     if (plevel > 1) 
     {
       for (i = 0; i < numCore; i++)  {
-        if (!cores[i]->power_prof_en)
-          cores[i]->set_gpu_clock(proc_cycle, proc_tot_cycle, kernel_id);
+        if (power_prof_en)
+          cores[i]->set_gpu_clock(proc_cycle, proc_tot_cycle, kernel_id, i);
         cores[i]->displayEnergy(indent + 4, plevel, is_tdp, new_kernel);
       }
       //if (!XML->sys.Private_L2) {
@@ -1029,7 +1029,7 @@ void Processor::displayEnergy(uint32_t indent, int plevel, bool is_tdp_parm)
     if (XML->sys.mc.number_mcs > 0 &&
        XML->sys.mc.memory_channels_per_mc > 0) 
     {
-      if (!mc->power_prof_en)
+      if (power_prof_en)
         mc->set_gpu_clock(proc_cycle, proc_tot_cycle, kernel_id);
       mc->displayEnergy(indent + 4, plevel, is_tdp, new_kernel);
     }
@@ -1425,19 +1425,6 @@ void Processor::set_proc_param() {
   procdynp.numL2Dir = XML->sys.number_of_L2Directories;
   procdynp.numMC = XML->sys.mc.number_mcs;
   procdynp.numMCChannel = XML->sys.mc.memory_channels_per_mc;
-
-  //	if (procdynp.numCore<1)
-  //	{
-  //		cout<<" The target processor should at least have one core on
-  // chip."
-  //<<endl; 		exit(0);
-  //	}
-
-  //  if (numNOCs<0 || numNOCs>2)
-  //    {
-  //  	  cout <<"number of NOCs must be 1 (only global NOCs) or 2 (both global
-  //  and local NOCs)"<<endl; 	  exit(0);
-  //    }
 
   /* Basic parameters*/
   interface_ip.data_arr_ram_cell_tech_type = debug ? 0 : XML->sys.device_type;

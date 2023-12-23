@@ -576,7 +576,7 @@ class Core : public Component {
   void open_folders(bool new_kernel);
   void reopen_folders(unsigned long long cycle);
   void set_gpu_clock(unsigned long long *cycle, unsigned long long *tot_cycle, 
-                     unsigned *gpu_kernel_counter);
+                     unsigned *gpu_kernel_counter, unsigned core_id);
 
   unsigned long long *proc_cycle;
   unsigned long long *proc_tot_cycle;

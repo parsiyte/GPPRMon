@@ -1139,8 +1139,7 @@ void MemoryController::displayEnergy(uint32_t indent, int plevel, bool is_tdp, b
   string indent_str_next(indent + 2, ' ');
   bool long_channel = XML->sys.longer_channel_device;
 
-  if (power_prof_en == false || new_kernel)
-  {
+  if (power_prof_en == false || new_kernel) {
     open_folders(new_kernel);
     power_prof_en = true;
   }
