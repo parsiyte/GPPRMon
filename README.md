@@ -18,26 +18,26 @@ After installing prerequisite libraries to run the simulator properly, clone the
 
 ### Building simulator with doxygen files
 ```console
-user@gpgpu_sim:~$ source setup_environment <build_type> 
+user@GPPRMon:~$ source setup_environment <build_type> 
 # That command sets the environment variables so that the simulator can find related executables in the linkage path.
 # If you want to debug the simulator (as it was written in C/C++), you should specify build_type as `debug`.
 # Otherwise, you do not need to specify it; blank as empty. It will automatically build the executables with `release` version.
 ```
 ```console
-user@gpgpu_sim:~$ make     #To compile source files, create and link the executable files of the simulator.
-user@gpgpu_sim:~$ make clean      #To clean the simulator executables
+user@GPPRMon:~$ make     #To compile source files, create and link the executable files of the simulator.
+user@GPPRMon:~$ make clean      #To clean the simulator executables
 ``` 
 Moreover, if you want to generate documentation files whose dependencies are specified as optional, you must first install the dependencies. Afterward, you can obtain the docs with 
 ```console
-user@gpgpu_sim:~$ make docs     # Generates doxygen files describing simulator elements 
-user@gpgpu_sim:~$ make cleandocs  	# Deletes pre-generated doxygen files if they exist.
+user@GPPRMon:~$ make docs     # Generates doxygen files describing simulator elements 
+user@GPPRMon:~$ make cleandocs  	# Deletes pre-generated doxygen files if they exist.
 ``` 
 The generated documentation with doxygen eases understanding classes, templates, functions, etc., for the simulator.
 
 ## 2. Tracking Runtime Memory Access on L1D, L2 and DRAM
 During the simulation, the simulator creates memory access information in the below path.  
 ```console
-user@gpgpu_sim/runtime_profiling_metrics/memory_accesses:~$
+user@GPPRMon/runtime_profiling_metrics/memory_accesses:~$
 ``` 
 To enable memory access metric collection, one needs to specify the below flags in the `gpgpusim.config` file.
 
@@ -56,7 +56,7 @@ To enable memory access metric collection, one needs to specify the below flags 
 ## 3. Tracking Runtime Power Consumption of GPU and Sub-components
 During simulation, the simulator records power consumption metrics in the below path.
 ```console
-user@gpgpu_sim/runtime_profiling_metrics/energy_consumption:~$
+user@GPPRMon/runtime_profiling_metrics/energy_consumption:~$
 ```
 The simulator will create separate folders and power profiling metrics for each kernel at runtime. For now, the below power consumption metrics are supported, but these metrics may be enhanced further to investigate sub-units independently.
 
@@ -92,7 +92,6 @@ The simulator will create separate folders and power profiling metrics for each 
 Our visualizer tool takes .csv files obtained via runtime simulation of a GPU kernel and generates three different visualization schemes. Currently, the simulator supports `GTX480_FERMI, QV100_VOLTA, RTX2060S_TURING, RTX2060_TURING, RTX3070_AMPERE, TITAN_KEPLER, TITANV_VOLTA, TITANX_PASCAL` GPUs currently. As each GPU has a different memory hierarchy, I designed varying schemes for each hierarchy. However, I designed SM and GPU visualizations as one such that their designs are applicable for each GPU.
 
 1) A CTA's instruction issue/completion, Power consumption of the corresponding SM of and L1D usage of that SM. <br> 
- 
 ![KID=0_onSM=1_withCTA=1_interval=55500_56000](https://user-images.githubusercontent.com/73446582/219937394-0df2a6ed-92a7-4198-8532-9a36b1df83c8.png)
 
 The first visualization displays the instructions for the 1st CTA, which is mapped onto the 1st SM. While PC shows the instruction's pc, Opcode shows the operational codes of the instructions of the 1st thread block. Operands show the register IDs for the corresponding opcode of the instructions.
@@ -102,10 +101,6 @@ At the rightmost column (ISSUE/COMPLETION), the visualizer displays the issuing 
 This scheme shows a CTA's issued and completed instructions within a predetermined cycle interval. For the above example, this interval is the \[55500, 56000).  <br>
 
 In addition, one may see the L1D cache usage and consumed runtime power measurements for the subcomponents of the SMs. The **RunTimeDynm** parameter represents the total consumed power for each section. Execution, functional and load/store units, and idle-core are the main sub-parts of an SM's power consumption. Also, IPC per SM is displayed at the bottom. <br> 
-
-Also, we provide a display option for the average runtime memory access statistics and, IPC vs power dissipation among the units below.  
-![Screenshot from 2024-01-07 16-47-19](https://github.com/parsiyte/GPPRMon/assets/73446582/c7a92ac7-de97-456c-b42f-406ba7d80ffc)
-
 
 2) Access information on the memory units and power consumption of memory controller + DRAM units. <br>
  
@@ -129,8 +124,15 @@ GPUs mainly consist of SMs, which include functional units, register files and c
 
 ![KID=0_gpuAverageStatsForInterval=55000_55500](https://user-images.githubusercontent.com/73446582/219937405-6ea3e694-706f-4b1d-866a-8c198e45424e.png)
 
-The third visualization shows the on-average L1D, L2 cache, and DRAM access statistics in the Memory Usage Metrics, average IPC among active SMs and Power Consumption Metrics of NoCs, memory partitions of L2 caches and MC+DRAM, and SMs. <br >
+The third visualization shows the on-average L1D, L2 cache, and DRAM access statistics in the Memory Usage Metrics, average IPC among active SMs and Power Consumption Metrics of NoCs, memory partitions of L2 caches and MC+DRAM, and SMs. <be >
 
+In addition to the above runtime visualization options, we provide a display option for the average runtime memory access statistics and, IPC vs power dissipation among the units below.  
+![Screenshot from 2024-01-07 16-47-19](https://github.com/parsiyte/GPPRMon/assets/73446582/c7a92ac7-de97-456c-b42f-406ba7d80ffc)
+To obtain average runtime memory access statistics and, IPC vs power dissipation:
+```console
+user@GPPRMon/runtime_visualizer:~$ python3 average_disp.py param1 param2 param3 param4
+``` 
+where _param1_ argument is used for the kernel id argument, _param2_ is for start_interval, _param3_ finish_interval and, _param4_ is for the sampling frequence. 
 
 We have experimented the page ranking algorithm both on GV100 and RTX2060 S. Also, we have configured the GPU of Jetson AGX Xavier system on module, and emperimented the Fast Fouirer Transform Algorithm on it. Experimental profiling and displaying results are too large to upload here. However, we hold them into our local servers. If you want, we can transmit to any address. Do not hesitate contacting us for any of the result. 
 
