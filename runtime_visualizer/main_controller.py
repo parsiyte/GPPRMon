@@ -292,7 +292,6 @@ if __name__ == '__main__':
   print("Sampling Frequency: " + str(sampling_freq_en))
   print("-" * 80)
 
-
   kid = 0
   nofActiveSM = 0
   start = ker_launch_lat

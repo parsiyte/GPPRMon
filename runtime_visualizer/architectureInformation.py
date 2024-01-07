@@ -24,21 +24,14 @@ def collectArchitectureInformation(arch):
   elif arch == "RTX3070":
     path = "SM86_RTX3070"
 
-  elif arch == "V100":
-    path = "V100"
-
   elif arch == "JetsonAGXXavier":
     path = "JetsonAGXXavier"
 
-  elif arch == "XavierNX" or arch == "V100":
-    path = "XavierNX"
-
-
   if arch == "V100" or arch == "JetsonAGXXavier" or arch == "XavierNX":
-    path = "../newGPUConfigs/" + path + "/gpgpusim.config"
+    path = "../newGPUConfigs/" + arch + "/gpgpusim.config"
   
   else: 
-    path = "../configs/tested-cfgs/"+ path + "/gpgpusim.config"
+    print("There does not exist " + arch + " architecture")
   
   file = open(path, 'r')
   lines = len(file.readlines())

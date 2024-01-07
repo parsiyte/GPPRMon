@@ -1,334 +1,580 @@
 import numpy as np
 import csv
 import matplotlib.pyplot as plt
-
-l1d_array = []
-l2_array = []
-dram_array = [] 
-
-finish = 1999000
-start = 1000000
-freq = 200
-
-def metric_calc_memory(l1d, l2, dram, nofl1d, nofl2, nofdram):
-  dir_path = ""
-  if l1d == True:
-    dir_path = "../runtime_profiling_metrics/memory_accesses/kernel_1/l1d/l1d_"
-  elif l2 == True:
-    dir_path = "../runtime_profiling_metrics/memory_accesses/kernel_1/l2/l2_" 
-  elif dram == True:
-    dir_path = "../runtime_profiling_metrics/memory_accesses/kernel_1/dram/dram_" 
-
-  if l1d == True or l2 == True:
-    channel = 0
-    if l1d == True:
-      channel = nofl1d
-    elif l2 == True:  
-      channel = nofl2
-
-    array = np.zeros((channel, int((finish-start)/freq), 6), dtype = int)
-    sample = 0
-    for i in range(0, channel):
-      path = dir_path + str(i) + "_2.csv"
-      file = open(path, 'r')
-      reader = csv.reader(file)
-      counter_1 = 0
-      counter_2 = 0
-      for row in reader:
-        if "cycle" not in row and (int(row[0]) < finish) and (int(row[0]) >= start):
-          array[i][counter_2][0] += int(row[1])    # hit accesses
-          array[i][counter_2][1] += int(row[2])    # hit reserved accesses
-          array[i][counter_2][2] += int(row[3])    # miss accesses
-          array[i][counter_2][3] += int(row[4])    # reservation failures
-          array[i][counter_2][4] += int(row[5])    # sector misses 
-          array[i][counter_2][5] += int(row[6])    # mshr hits
-          counter_1 += 1
-          if counter_1 == 10: 
-            counter_2 += 1
-            counter_1 = 0
-        if "cycle" not in row and int(row[0]) >= finish:
-          sample = counter_2
-          break
-      file.close()
-
-    av_arr = np.zeros((sample, 6), dtype = int)
-    for i in range(0, sample):
-      for j in range(0, channel):
-        av_arr[i][0] += array[j][i][0]
-        av_arr[i][1] += array[j][i][1]
-        av_arr[i][2] += array[j][i][2]
-        av_arr[i][3] += array[j][i][3]
-        av_arr[i][4] += array[j][i][4]
-        av_arr[i][5] += array[j][i][5]
-
-    av_rates = np.zeros((6, sample), dtype = float)
-    for i in range(0, sample):
-      acc = 0
-      for j in range(0, 5):
-        acc += av_arr[i][j]
-
-      for j in range(0, 5):
-        av_rates[j][i] = float(av_arr[i][j]) / acc
-      av_rates[5][i] = float(av_arr[i][5]) / av_arr[i][4]
-    return av_rates
-
-  elif dram == True:
-    array = np.zeros((nofdram, int((finish-start)/freq), 6), dtype = int)
-    sample = 0
-    for i in range(0, nofdram):
-      path = dir_path + str(i) + "_2.csv" 
-      file = open(path, 'r')
-      reader = csv.reader(file)
-      counter_1 = 0
-      counter_2 = 0
-      for row in reader:
-        if "cycle" not in row and (int(row[0]) < finish) and (int(row[0]) >= start):
-          array[i][counter_2][0] += int(row[1])    # hit accesses
-          array[i][counter_2][1] += int(row[2])    # hit reserved accesses
-          counter_1 += 1
-          if counter_1 == 10: 
-            counter_2 += 1
-            counter_1 = 0
-        if "cycle" not in row and int(row[0]) >= finish:
-          sample = counter_2
-          break
-      file.close()
-
-    av_arr = np.zeros((sample, 2), dtype = int)
-    for i in range(0, sample):
-      for j in range(0, nofdram):
-        av_arr[i][0] += array[j][i][0]
-        av_arr[i][1] += array[j][i][1]
-  
-    av_rates = np.zeros((2, sample), dtype = float)
-    for i in range(0, sample):
-      acc = 0
-      for j in range(0, 2):
-        acc += av_arr[i][j]
-      for j in range(0, 2):
-        av_rates[j][i] = float(av_arr[i][j]) / acc
-    return av_rates
-
-def plot(l1d, l2, dram, exp):
-
-  figure, axis = plt.subplots(3, 1)
-
-  X = np.arange(start = start, stop = finish, step = freq)
-
-  # For Sine Function
-  axis[0].plot(X, l1d[0], color='g', label='Hit')
-  axis[0].plot(X, l1d[1], color='b', label='Hit Reserved')
-  axis[0].plot(X, l1d[2], color='r', label='Miss')
-  axis[0].plot(X, l1d[3], color='m', label='Reservation Failure')
-  axis[0].plot(X, l1d[4], color='y', label='Sector Miss')
-  axis[0].plot(X, l1d[5], color='c', label='MSHR Hits')
-  axis[0].set_title("Average L1D Access Statistics During Runtime")
-  axis[0].set_ylabel("Access Rates")
-  axis[0].legend(loc = 'upper right')
-#  plt.legend()
-
-  axis[1].plot(X, l2[0], color='g', label='Hit')
-  axis[1].plot(X, l2[1], color='b', label='Hit Reserved')
-  axis[1].plot(X, l2[2], color='r', label='Miss')
-  axis[1].plot(X, l2[3], color='m', label='Reservation Failure')
-  axis[1].plot(X, l2[4], color='y', label='Sector Miss')
-  axis[1].plot(X, l2[5], color='c', label='MSHR Hits')
-  axis[1].set_title("Average L2 Access Statistics During Runtime")
-  axis[1].set_ylabel("Access Rates")
-  
-  # For Tangent Function
-  axis[2].plot(X, dram[0], color='g', label='Row Buffer Hit')
-  axis[2].plot(X, dram[1], color='c', label='Row Buffer Miss')
-  axis[2].set_title("Average Row Buffer Access Statistics During Runtime")
-  axis[2].set_ylabel("Access Rates")
-
-  # Naming the x-axis, y-axis and the whole graph
-  plt.xlabel("Cycles")
-  plt.legend(loc = 'upper right')
-
-  plt.show()
-
-#l1d = metric_calc_memory(True, False, False, 80, 64, 32)
-#l2 = metric_calc_memory(False, True, False, 80, 64, 32)
-#dram = metric_calc_memory(False, False, True, 80, 64, 32)
-#plot(l1d, l2, dram, None)
+import sys 
+# Determine GPU and architecture specs
+from architectureInformation import collectArchitectureInformation
 
 
-def ipc_col_calc(kernel, start_int, finish_int, freq, nofSM):
+def l1d_metrics(nofl1d, kid, start, finish, freq):
+  dir_path = "../runtime_profiling_metrics/memory_accesses/kernel_" + str(kid) + "/l1d/l1d_"
 
-  path = "../runtime_profiling_metrics/memory_accesses/kernel_" + str(kernel) + "/ipc/"
-
-  if start_int < 1000000:
-    path = path + "ipc.csv" 
-
-  else:
-    rem = int(start_int / 1000000)
-    path = path + "ipc_" + str(rem + 1) + ".csv" 
-
-  ipc_rates =  []
-  
-  np.zeros(int((finish_int - start_int)/freq), dtype = float)
-
-  file = open(path, 'r')
-  reader = csv.reader(file) 
-  counter = 0
-
-  for row in reader:
-    if "cycle" not in row and int(row[0]) >= start_int :
-      if counter == 0:
-        ipc_rates.append(0)
-
-      for j in range(0, nofSM):
-        if row[j+1] == '':
-          ipc_rates[len(ipc_rates)-1] += 0
-        else:
-          ipc_rates[len(ipc_rates)-1] += float(row[j+1])
-          
-      counter += 1
-      if counter == int(freq/20):
-        counter = 0
-        ipc_rates[len(ipc_rates)-1] = float(ipc_rates[len(ipc_rates)-1]/10)
- 
-    if "cycle" not in row and int((finish_int - start_int)/freq) == len(ipc_rates):
-      break
-
-  file.close()
-  return ipc_rates
-
-def power_col_calc(kernel, start_int, finish_int, freq):
-
-  baseline_path = "../runtime_profiling_metrics/energy_consumption/kernel_" + str(kernel) 
-  proc_total_path = baseline_path + "/f_processor.csv"
-  proc_cores_path = baseline_path + "/f_p_total_cores.csv"
-  proc_l2_path = baseline_path + "/f_p_total_l2.csv"
-  proc_mcs_path = baseline_path + "/f_p_total_mcs.csv"
-  proc_nocs_path = baseline_path + "/f_p_total_nocs.csv"
-
-  metrics = {"total": [], "cores" : [], "l2": [], "mcs" : [], "nocs": []}
-
-  file = open(proc_total_path, 'r')
+  intervals = []
+  file = open(dir_path + "0.csv", 'r')
   reader = csv.reader(file)
-  counter = 0
   for row in reader:
-#    print(row)
-    if ("Cycle" not in row) and (start_int <= int(row[0])):
-      if counter == 0:
-        metrics["total"].append(float(row[7]))
-
-      metrics["total"][len(metrics["total"])-1] += float(row[7])
-
-      counter += 1
-      if counter == 10:
-        counter = 0
-
-    if ("Cycle" not in row) and int((finish_int - start_int)/freq) == len(metrics["total"]):
+    if "cycle" not in row:
+      intervals.append(int(row[0]))
+    if len(intervals) == 2:
       break
   file.close()
 
-  for i in ["cores", "l2", "mcs", "nocs"]:
-    if i == "cores":
-      file = open(proc_cores_path, "r")
-    if i == "l2":
-      file = open(proc_l2_path, "r")
-    if i == "mcs":
-      file = open(proc_mcs_path, "r")
-    if i == "nocs":
-      file = open(proc_nocs_path, "r")
-  
-    reader = csv.reader(file)
-    counter = 0
-  
-    for row in reader:
-      if ("Cycle" not in row) and start_int <= int(row[0]):
-        if counter == 0:
-          metrics[i].append(float(row[5]))
-        else:
-          metrics[i][len(metrics[i])-1] += float(row[5])
-  
-        counter += 1
-        if counter == 10:
-          counter = 0
+  # simulator sampling frequency
+  simSampFreq = intervals[1] - intervals[0]
+  startCycle = 0
 
-      if ("Cycle" not in row) and int((finish_int - start_int)/freq) == len(metrics[i]):
+  windowIntervalStart = 0
+  if start > 999999:
+    windowIntervalStart = int(start / 1000000)
+
+  windowIntervalFinish = 0
+  if finish > 999999:
+    windowIntervalFinish = int(finish / 1000000)
+
+  path = ""
+  l1d = np.zeros((6, int((finish-start)/freq)), dtype = int)
+  for i in range(windowIntervalStart, windowIntervalFinish + 1):
+    for j in range (0, nofl1d):
+      if i > 0:
+        path = dir_path + str(j) + "_" + str(i+1) + ".csv"
+      else:
+        path = dir_path + str(j) + ".csv"
+
+      file = open(path, 'r')
+      reader = csv.reader(file)
+
+      hits = 0
+      hitReses = 0
+      misses = 0
+      resFails = 0
+      secMisses = 0
+      mshrHits = 0
+      cycle = 0
+      for row in reader:
+        if "cycle" not in row and (int(row[0]) < finish) and (int(row[0]) >= start):
+          cycle = int(row[0])
+          hits += int(row[1])    # hit accesses
+          hitReses += int(row[2])    # hit reserved accesses
+          misses += int(row[3])    # miss accesses
+          resFails += int(row[4])    # reservation failures
+          secMisses += int(row[5])    # sector misses 
+          mshrHits += int(row[6])    # mshr hits
+
+        if "cycle" not in row and cycle % freq == 0:
+          l1d[0][int(cycle / freq)] += hits    # hit accesses
+          l1d[1][int(cycle / freq)] += hitReses    # hit reserved accesses
+          l1d[2][int(cycle / freq)] += misses    # miss accesses
+          l1d[3][int(cycle / freq)] += resFails    # reservation failures
+          l1d[4][int(cycle / freq)] += secMisses    # sector misses 
+          l1d[5][int(cycle / freq)] += mshrHits    # mshr hits
+          hits = 0
+          hitReses = 0
+          misses = 0
+          resFails = 0
+          secMisses = 0
+          mshrHits = 0
+
+        if cycle >= finish:
+          break
+      file.close()
+
+  total_access = 0 
+  total_misses = 0
+  l1dRes = [[], [], [], [], [], []]
+  for i in range(0, len(l1d[0])):
+    for j in range(0, 6): # hit, hit_res, miss, res_fail, sec_miss, mshr_hit.
+      if j in [0,1,2,3,4]:
+        total_access += l1d[j][i]
+      if j in [2,4]:
+        total_misses += l1d[j][i]
+    for j in range(0, 6):
+      if j != 5:
+        l1dRes[j].append(float(l1d[j][i]) / total_access)
+      else:
+        l1dRes[j].append(float(l1d[j][i]) / total_misses)
+    total_access = 0 
+    total_misses = 0
+
+  return l1dRes
+
+def l2_metrics(nofl2, kid, start, finish, freq):
+  dir_path = "../runtime_profiling_metrics/memory_accesses/kernel_" + str(kid) + "/l2/l2_"
+  intervals = []
+  file = open(dir_path + "0.csv", 'r')
+  reader = csv.reader(file)
+  for row in reader:
+    if "cycle" not in row:
+      intervals.append(int(row[0]))
+    if len(intervals) == 2:
+      break
+  file.close()
+
+  # simulator sampling frequency
+  simSampFreq = intervals[1] - intervals[0]
+  startCycle = 0
+
+  windowIntervalStart = 0
+  if start > 999999:
+    windowIntervalStart = int(start / 1000000)
+
+  windowIntervalFinish = 0
+  if finish > 999999:
+    windowIntervalFinish = int(finish / 1000000)
+
+  path = ""
+  l2 = np.zeros((6, int((finish-start)/freq)), dtype = int)
+  for i in range(windowIntervalStart, windowIntervalFinish + 1):
+    for j in range (0, nofl2):
+      if i > 0:
+        path = dir_path + str(j) + "_" + str(i+1) + ".csv"
+      else:
+        path = dir_path + str(j) + ".csv"
+      file = open(path, 'r')
+      reader = csv.reader(file)
+
+      hits = 0
+      hitReses = 0
+      misses = 0
+      resFails = 0
+      secMisses = 0
+      mshrHits = 0
+      cycle = 0
+      for row in reader:
+        if "cycle" not in row and (int(row[0]) < finish) and (int(row[0]) >= start):
+          cycle = int(row[0])
+          hits += int(row[1])    # hit accesses
+          hitReses += int(row[2])    # hit reserved accesses
+          misses += int(row[3])    # miss accesses
+          resFails += int(row[4])    # reservation failures
+          secMisses += int(row[5])    # sector misses 
+          mshrHits += int(row[6])    # mshr hits
+
+        if "cycle" not in row and cycle % freq == 0:
+          l2[0][int(cycle / freq)] += hits    # hit accesses
+          l2[1][int(cycle / freq)] += hitReses    # hit reserved accesses
+          l2[2][int(cycle / freq)] += misses    # miss accesses
+          l2[3][int(cycle / freq)] += resFails    # reservation failures
+          l2[4][int(cycle / freq)] += secMisses    # sector misses 
+          l2[5][int(cycle / freq)] += mshrHits    # mshr hits
+          hits = 0
+          hitReses = 0
+          misses = 0
+          resFails = 0
+          secMisses = 0
+          mshrHits = 0
+
+        if cycle >= finish:
+          break
+      file.close()
+
+  total_access = 0 
+  total_misses = 0
+  l2Res = [[], [], [], [], [], []]
+  for i in range(0, len(l2[0])):
+    for j in range(0, 6): # hit, hit_res, miss, res_fail, sec_miss, mshr_hit.
+      if j in [0,1,2,3,4]:
+        total_access += l2[j][i]
+      if j in [2,4]:
+        total_misses += l2[j][i]
+    for j in range(0, 6):
+      if j != 5:
+        l2Res[j].append(float(l2[j][i]) / total_access)
+      else:
+        l2Res[j].append(float(l2[j][i]) / total_misses)
+    total_access = 0 
+    total_misses = 0
+
+  return l2Res
+
+def dram_metrics(nofdram, kid, start, finish, freq):
+  dir_path = "../runtime_profiling_metrics/memory_accesses/kernel_" + str(kid) + "/dram/dram_"
+  intervals = []
+  file = open(dir_path + "0.csv", 'r')
+  reader = csv.reader(file)
+  for row in reader:
+    if "cycle" not in row:
+      intervals.append(int(row[0]))
+    if len(intervals) == 2:
+      break
+  file.close()
+
+  # simulator sampling frequency
+  simSampFreq = intervals[1] - intervals[0]
+  startCycle = 0
+
+  windowIntervalStart = 0
+  if start > 999999:
+    windowIntervalStart = int(start / 1000000)
+
+  windowIntervalFinish = 0
+  if finish > 999999:
+    windowIntervalFinish = int(finish / 1000000)
+
+  path = ""
+  dram = np.zeros((2, int((finish-start)/freq)), dtype = int)
+  for i in range(windowIntervalStart, windowIntervalFinish + 1):
+    for j in range (0, nofdram):
+      if i > 0:
+        path = dir_path + str(j) + "_" + str(i+1) + ".csv"
+      else:
+        path = dir_path + str(j) + ".csv"
+      file = open(path, 'r')
+      reader = csv.reader(file)
+
+      hits = 0
+      misses = 0
+      cycle = 0
+      for row in reader:
+        if "cycle" not in row and (int(row[0]) < finish) and (int(row[0]) >= start):
+          cycle = int(row[0])
+          hits += int(row[1])    # hit accesses
+          misses += int(row[2])    # miss accesses
+
+        if "cycle" not in row and cycle % freq == 0:
+          dram[0][int(cycle / freq)] += hits    # hit accesses
+          dram[1][int(cycle / freq)] += misses    # miss accesses
+          hits = 0
+          misses = 0
+
+        if cycle >= finish:
+          break
+      file.close()
+
+  total_access = 0 
+  dramRes = [[], []]
+  for i in range(0, len(dram[0])):
+    for j in range(0, 2): # hit, miss.
+      total_access += dram[j][i]
+    for j in range(0, 2):
+      dramRes[j].append(float(dram[j][i]) / total_access)
+    total_access = 0 
+  return dramRes
+
+def ipc_col_calc(nofl1d, kid, start, finish, freq):
+  dir_path = "../runtime_profiling_metrics/memory_accesses/kernel_" + str(kid) + "/ipc/ipc"
+  intervals = []
+  file = open(dir_path + ".csv", 'r')
+  reader = csv.reader(file)
+  for row in reader:
+    if "cycle" not in row:
+      intervals.append(int(row[0]))
+    if len(intervals) == 2:
+      break
+  file.close()
+
+  # simulator sampling frequency
+  simSampFreq = intervals[1] - intervals[0]
+  startCycle = 0
+
+  windowIntervalStart = 0
+  if start > 999999:
+    windowIntervalStart = int(start / 1000000)
+
+  windowIntervalFinish = 0
+  if finish > 999999:
+    windowIntervalFinish = int(finish / 1000000)
+
+  path = ""
+  ipc = np.zeros((int((finish-start)/freq)), dtype = float)
+  for i in range(windowIntervalStart, windowIntervalFinish + 1):
+    if i > 0:
+      path = dir_path + "_" + str(i+1) + ".csv"
+    else:
+      path = dir_path + ".csv"
+    file = open(path, 'r')
+    reader = csv.reader(file)
+
+    ipc_per_interval = []
+    for j in range (nofl1d):
+      ipc_per_interval.append([])
+    ipc_per_interval.append([])
+
+    for row in reader:
+      if "cycle" not in row and (int(row[0]) < finish) and (int(row[0]) >= start):
+        for idx, val in enumerate(row): 
+          if idx == 0:
+            ipc_per_interval[idx].append(int(val))
+          else:
+            ipc_per_interval[idx].append(float(val))
+
+      if "cycle" not in row and int(row[0]) >= finish:
         break
     file.close()
 
-  return metrics
+    zeroIPCs = []
+    for j in range (1, len(ipc_per_interval)):
+      if sum(ipc_per_interval[j]) == 0:
+        zeroIPCs.append(j)
+
+    nofActiveSMs = nofl1d - len(zeroIPCs)
+    for j in range(0, len(ipc_per_interval[0])):
+      for k in range(1, len(ipc_per_interval)):
+        if k not in zeroIPCs:
+          ipc[int(ipc_per_interval[0][j]/freq)] += ipc_per_interval[k][j]
+      ipc[int(ipc_per_interval[0][j]/freq)] = \
+                    ipc[int(ipc_per_interval[0][j]/freq)] / nofActiveSMs
+  return ipc
+
+def power_col_calc(kid, start, finish, freq):
+  baseline_path = "../runtime_profiling_metrics/energy_consumption/kernel_" + str(kid) 
+
+  intervals = []
+  file = open(baseline_path + "/f_processor.csv", 'r')
+  reader = csv.reader(file)
+  for row in reader:
+    if "Cycle" not in row:
+      intervals.append(int(row[0]))
+    if len(intervals) == 2:
+      break
+  file.close()
+
+  # simulator sampling frequency
+  simSampFreq = intervals[1] - intervals[0]
+  startCycle = 0
+
+  windowIntervalStart = 0
+  if start > 999999:
+    windowIntervalStart = int(start / 1000000)
+
+  windowIntervalFinish = 0
+  if finish > 999999:
+    windowIntervalFinish = int(finish / 1000000)
+
+  pow_metrics = {}
+  pow_metrics["total"] = np.zeros((int((finish-start)/freq)), dtype = float)
+  proc_total_path = baseline_path + "/f_processor"
+  path = ""
+  for i in range(windowIntervalStart, windowIntervalFinish + 1):
+    if i > 0:
+      path = proc_total_path + "_" + str(i+1) + ".csv"
+    else:
+      path = proc_total_path + ".csv"
+    file = open(path, 'r')
+    reader = csv.reader(file)
+
+    powCounter = 0
+    cycle = 0
+    for row in reader:
+      if ("Cycle" not in row) and (start <= int(row[0])):
+        powCounter += float(row[7])
+        cycle = int(row[0])
+
+      if cycle >= finish:
+        break
+
+      if "Cycle" not in row and cycle % freq == 0:
+        pow_metrics["total"][int(cycle / freq)] += powCounter    # hit accesses
+        powCounter = 0
+
+    file.close()
+
+  pow_metrics["cores"] = np.zeros((int((finish-start)/freq)), dtype = float)
+  proc_cores_path = baseline_path + "/f_p_total_cores"
+  for i in range(windowIntervalStart, windowIntervalFinish + 1):
+    if i > 0:
+      path = proc_cores_path + "_" + str(i+1) + ".csv"
+    else:
+      path = proc_cores_path + ".csv"
+    file = open(path, 'r')
+    reader = csv.reader(file)
+
+    powCounter = 0
+    cycle = 0
+    for row in reader:
+      if ("Cycle" not in row) and (start <= int(row[0])):
+        powCounter += float(row[5])
+        cycle = int(row[0])
+
+      if cycle >= finish:
+        break
+
+      if "Cycle" not in row and cycle % freq == 0:
+        pow_metrics["cores"][int(cycle / freq)] += powCounter    # hit accesses
+        powCounter = 0
+    file.close()
+
+  pow_metrics["l2"] = np.zeros((int((finish-start)/freq)), dtype = float)
+  proc_l2_path = baseline_path + "/f_p_total_l2"
+  for i in range(windowIntervalStart, windowIntervalFinish + 1):
+    if i > 0:
+      path = proc_l2_path + "_" + str(i+1) + ".csv"
+    else:
+      path = proc_l2_path + ".csv"
+    file = open(path, 'r')
+    reader = csv.reader(file)
+
+    powCounter = 0
+    cycle = 0
+    for row in reader:
+      if ("Cycle" not in row) and (start <= int(row[0])):
+        powCounter += float(row[5])
+        cycle = int(row[0])
+
+      if cycle >= finish:
+        break
+
+      if "Cycle" not in row and cycle % freq == 0:
+        pow_metrics["l2"][int(cycle / freq)] += powCounter    # hit accesses
+        powCounter = 0
+    file.close()
+
+  pow_metrics["mcs"] = np.zeros((int((finish-start)/freq)), dtype = float)
+  proc_mcs_path = baseline_path + "/f_p_total_mcs"
+  for i in range(windowIntervalStart, windowIntervalFinish + 1):
+    if i > 0:
+      path = proc_mcs_path + "_" + str(i+1) + ".csv"
+    else:
+      path = proc_mcs_path + ".csv"
+    file = open(path, 'r')
+    reader = csv.reader(file)
+
+    powCounter = 0
+    cycle = 0
+    for row in reader:
+      if ("Cycle" not in row) and (start <= int(row[0])):
+        powCounter += float(row[5])
+        cycle = int(row[0])
+
+      if cycle >= finish:
+        break
+
+      if "Cycle" not in row and cycle % freq == 0:
+        pow_metrics["mcs"][int(cycle / freq)] += powCounter    # hit accesses
+        powCounter = 0
+    file.close()
+
+  pow_metrics["nocs"] = np.zeros((int((finish-start)/freq)), dtype = float)
+  proc_nocs_path = baseline_path + "/f_p_total_nocs"
+  for i in range(windowIntervalStart, windowIntervalFinish + 1):
+    if i > 0:
+      path = proc_nocs_path + "_" + str(i+1) + ".csv"
+    else:
+      path = proc_nocs_path + ".csv"
+    file = open(path, 'r')
+    reader = csv.reader(file)
+
+    powCounter = 0
+    cycle = 0
+    for row in reader:
+      if ("Cycle" not in row) and (start <= int(row[0])):
+        powCounter += float(row[5])
+        cycle = int(row[0])
+
+      if cycle >= finish:
+        break
+
+      if "Cycle" not in row and cycle % freq == 0:
+        pow_metrics["nocs"][int(cycle / freq)] += powCounter    # hit accesses
+        powCounter = 0
+    file.close()
+
+  return pow_metrics
+
+def get_config_information():
+  file = open("plot.config", 'r')
+  total_lines = len(file.readlines())
+  file.close()
+
+  global gpu_plot_en, core_plot_en, mem_hierar_plot_en, sampling_freq_en, arch_name, cta_ids_to_be_collected
+  global sim_file
+  file = open("plot.config", 'r')
+  for i in range(0, total_lines):
+    line = file.readline()
+    if "-plot_gpu" in line:
+      gpu_plot_en = int(line[len("-plot_gpu "):len(line)-1])
+    elif "-plot_memory_hiearchy" in line:
+      mem_hierar_plot_en = int(line[len("-plot_memory_hiearchy "):len(line)-1])
+    elif "-plot_core" in line:
+      core_plot_en = int(line[len("-plot_core "):len(line)-1])
+    elif "-sampling_frequency" in line:
+      sampling_freq_en = int(line[len("-sampling_frequency "):len(line)-1])
+    elif "-arch_name" in line:
+      arch_name = line[len("-arch_name "):len(line)-1]
+    elif "-cta_ids" in line:
+      if "all" in line:
+        cta_ids_to_be_collected = "all"
+      else:
+        ctas = line[len("-cta_ids "):]
+        id_tmp = ""
+        for j in range (0, len(ctas)):
+          if ctas[j] != ',' and ctas[j] != '\n':
+            id_tmp += ctas[j]
+          if ctas[j] == ',' or ctas[j] == '\n':
+            cta_ids_to_be_collected.append(int(id_tmp))
+            id_tmp = ""
+    elif "-simulation_file_output" in line:
+      sim_file = line[len("-simulation_file_output "): len(line)-1]
+  file.close()
 
 
-def plot_2():
+def plot_statistics(l1dR, l2R, dramR, ipcR, power_metricsR, start, finish, freq):
 
-  kernel = 0
-  start_int_1 = 5000
-  finish_int_1 = 55000
-  start_int_2 = 55000
-  finish_int_2 = 105000
-  start_int_3 = 105000
-  finish_int_3 = 155000
-  freq = 200
-  nofSM = 8
-  
-  ipc_1 = ipc_col_calc(kernel, start_int_1, finish_int_1, freq, nofSM)
-  ipc_2 = ipc_col_calc(kernel, start_int_2, finish_int_2, freq, nofSM)
-  ipc_3 = ipc_col_calc(kernel, start_int_3, finish_int_3, freq, nofSM)
-  power_metrics_1 = power_col_calc(kernel, start_int_1, finish_int_1, freq)
-  power_metrics_2 = power_col_calc(kernel, start_int_2, finish_int_2, freq)
-  power_metrics_3 = power_col_calc(kernel, start_int_3, finish_int_3, freq)
+  figure, axis = plt.subplots(4, 1)
+  X = np.arange(start = start, stop = finish, step = freq)
 
-  X_1 = np.arange(start = start_int_1, stop = finish_int_1, step = freq)
-  X_2 = np.arange(start = start_int_2, stop = finish_int_2, step = freq)
-  X_3 = np.arange(start = start_int_3, stop = finish_int_3, step = freq)
-
-  figure, axis = plt.subplots(3, 1)
-
-  axis[0].plot(X_1, power_metrics_1["total"], color='r', label='Total Diss. Power', linewidth = 1)
-  axis[0].plot(X_1, power_metrics_1["cores"], color='g', label='Pow on SMs', linewidth = 1)
-  axis[0].plot(X_1, power_metrics_1["l2"], color='m',    label='Pow on L2', linewidth = 1)
-  axis[0].plot(X_1, power_metrics_1["mcs"], color='y',   label='Pow on Mem. Part', linewidth = 1)
-  axis[0].plot(X_1, power_metrics_1["nocs"], color='c',  label='Pow on InterCon. Net.', linewidth = 1)
-  axis[0].set_ylabel("Dissipated Power", color="blue", fontsize=10)
-  axis[0].set_xlabel("Cycles", fontsize = 10)
+  axis[0].plot(X, l1dR[0], color='g', label='Hit')
+  axis[0].plot(X, l1dR[1], color='b', label='Hit Reserved')
+  axis[0].plot(X, l1dR[2], color='r', label='Miss')
+  axis[0].plot(X, l1dR[3], color='m', label='Reservation Failure')
+  axis[0].plot(X, l1dR[4], color='y', label='Sector Miss')
+  axis[0].plot(X, l1dR[5], color='c', label='MSHR Hits')
+  axis[0].set_title("Average L1D Access Statistics During Runtime")
+  axis[0].set_ylabel("Access Rates")
   axis[0].legend(loc = 'upper right')
-  axis[0].set_title("IPC and Dissipated Power During Runtime [5000, 55000]")
 
-  axis1=axis[0].twinx()
-  axis1.plot(X_1, ipc_1, color='b', label='IPC', linewidth = 1.2, ls = 'dashed')
-  axis1.set_ylabel("IPC rates", color='b', fontsize=10)
-  axis1.legend(loc = 'upper left')
+  axis[1].plot(X, l2R[0], color='g', label='Hit')
+  axis[1].plot(X, l2R[1], color='b', label='Hit Reserved')
+  axis[1].plot(X, l2R[2], color='r', label='Miss')
+  axis[1].plot(X, l2R[3], color='m', label='Reservation Failure')
+  axis[1].plot(X, l2R[4], color='y', label='Sector Miss')
+  axis[1].plot(X, l2R[5], color='c', label='MSHR Hits')
+  axis[1].set_title("Average L2 Access Statistics During Runtime")
+  axis[1].set_ylabel("Access Rates")
 
-  axis[1].plot(X_2, power_metrics_2["total"], color='r', label='Total Diss. Power', linewidth = 1)
-  axis[1].plot(X_2, power_metrics_2["cores"], color='g', label='Pow on SMs', linewidth = 1)
-  axis[1].plot(X_2, power_metrics_2["l2"], color='m',    label='Pow on L2', linewidth = 1)
-  axis[1].plot(X_2, power_metrics_2["mcs"], color='y',   label='Pow on Mem. Part', linewidth = 1)
-  axis[1].plot(X_2, power_metrics_2["nocs"], color='c',  label='Pow on InterCon. Net.', linewidth = 1)
-  axis[1].set_ylabel("Dissipated Power", color="blue", fontsize=10)
-  axis[1].set_xlabel("Cycles", fontsize = 10)
-#  axis[1].legend(loc = 'upper right')
-  axis[1].set_title("IPC and Dissipated Power During Runtime [55000, 105000]")
+  axis[2].plot(X, dramR[0], color='g', label='Row Buffer Hit')
+  axis[2].plot(X, dramR[1], color='c', label='Row Buffer Miss')
+  axis[2].set_title("Average Row Buffer Access Statistics During Runtime")
+  axis[2].set_ylabel("Access Rates")
 
-  axis2=axis[1].twinx()
-  axis2.plot(X_2, ipc_2, color='b', label='IPC', linewidth = 1.2, ls = 'dashed')
-  axis2.set_ylabel("IPC rates", color='b', fontsize=10)
-#  axis2.legend(loc = 'upper left')
+  axis[3].plot(X, power_metricsR["total"], color='r', label='Total Diss. Power', linewidth = 1)
+  axis[3].plot(X, power_metricsR["cores"], color='g', label='Pow on SMs', linewidth = 1)
+  axis[3].plot(X, power_metricsR["l2"], color='m',    label='Pow on L2', linewidth = 1)
+  axis[3].plot(X, power_metricsR["mcs"], color='y',   label='Pow on Mem. Part', linewidth = 1)
+  axis[3].plot(X, power_metricsR["nocs"], color='c',  label='Pow on InterCon. Net.', linewidth = 1)
+  axis[3].set_ylabel("Dissipated Power (mW)", color="black", fontsize=10)
+  axis[3].set_xlabel("Cycles", fontsize = 10)
+  axis[3].legend(loc = 2)
+  axis[3].set_title("IPC and Dissipated Power During Runtime")
 
-  axis[2].plot(X_3, power_metrics_3["total"], color='r', label='Total Diss. Power', linewidth = 1)
-  axis[2].plot(X_3, power_metrics_3["cores"], color='g', label='Pow on SMs', linewidth = 1)
-  axis[2].plot(X_3, power_metrics_3["l2"], color='m',    label='Pow on L2', linewidth = 1)
-  axis[2].plot(X_3, power_metrics_3["mcs"], color='y',   label='Pow on Mem. Part', linewidth = 1)
-  axis[2].plot(X_3, power_metrics_3["nocs"], color='c',  label='Pow on InterCon. Net.', linewidth = 1)
-  axis[2].set_ylabel("Dissipated Power", color="blue", fontsize=10)
-  axis[2].set_xlabel("Cycles", fontsize = 10)
-#  axis[2].legend(loc = 'upper right')
-  axis[2].set_title("IPC and Dissipated Power During Runtime [105000, 155000]")
+  axis1=axis[3].twinx()
+  axis1.plot(X, ipcR, color='b', label='IPC', linewidth = 1.2, ls = 'dashed')
+  axis1.set_ylabel("IPC rates", color='black', fontsize=10)
+  axis1.legend(loc = 1)
 
-  axis3=axis[2].twinx()
-  axis3.plot(X_3, ipc_3, color='b', label='IPC', linewidth = 1.2, ls = 'dashed')
-  axis3.set_ylabel("IPC rates", color='b', fontsize=10)
-#  axis3.legend(loc = 'upper left')
-
+  plt.xlabel("Cycles")
   plt.show()
 
-#ipc = ipc_col_calc()
-#power_metrics = power_col_calc()
-plot_2()
+if __name__ == '__main__':
+  gpu_plot_en = 0
+  core_plot_en = 0
+  mem_hierar_plot_en = 0
+  sampling_freq_en = 0
+  arch_name = ""
+  cta_ids_to_be_collected = []
+  sim_file = ""
+
+  get_config_information()
+  nofL1D, nofL2, nofDRAM, nofSM, _ = collectArchitectureInformation(arch_name)
+
+  kid = int(sys.argv[1])
+  start = int(sys.argv[2])
+  finish = int(sys.argv[3])
+  freq = int(sys.argv[4])
+
+  l1dR = l1d_metrics(nofL1D, kid, start, finish, freq)
+  l2R = l2_metrics(nofL2, kid, start, finish, freq)
+  dramR = dram_metrics(nofDRAM, kid, start, finish, freq)
+  ipcR = ipc_col_calc(nofL1D, kid, start, finish, freq)
+  power_metricsR = power_col_calc(kid, start, finish, freq)
+  plot_statistics(l1dR, l2R, dramR, ipcR, power_metricsR, start, finish, freq)
 
