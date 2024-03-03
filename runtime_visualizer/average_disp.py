@@ -32,7 +32,7 @@ def l1d_metrics(nofl1d, kid, start, finish, freq):
     windowIntervalFinish = int(finish / 1000000)
 
   path = ""
-  l1d = np.zeros((6, int((finish-start)/freq)), dtype = int)
+  l1d = np.zeros((6, int((finish)/freq)), dtype = int)
   for i in range(windowIntervalStart, windowIntervalFinish + 1):
     for j in range (0, nofl1d):
       if i > 0:
@@ -60,7 +60,7 @@ def l1d_metrics(nofl1d, kid, start, finish, freq):
           secMisses += int(row[5])    # sector misses 
           mshrHits += int(row[6])    # mshr hits
 
-        if "cycle" not in row and cycle % freq == 0:
+        if "cycle" not in row and cycle % freq == 0 and (int(row[0]) < finish) and (int(row[0]) >= start):
           l1d[0][int(cycle / freq)] += hits    # hit accesses
           l1d[1][int(cycle / freq)] += hitReses    # hit reserved accesses
           l1d[2][int(cycle / freq)] += misses    # miss accesses
@@ -81,20 +81,30 @@ def l1d_metrics(nofl1d, kid, start, finish, freq):
   total_access = 0 
   total_misses = 0
   l1dRes = [[], [], [], [], [], []]
+
   for i in range(0, len(l1d[0])):
     for j in range(0, 6): # hit, hit_res, miss, res_fail, sec_miss, mshr_hit.
       if j in [0,1,2,3,4]:
         total_access += l1d[j][i]
       if j in [2,4]:
         total_misses += l1d[j][i]
+
     for j in range(0, 6):
       if j != 5:
-        l1dRes[j].append(float(l1d[j][i]) / total_access)
+        if total_access == 0:
+          l1dRes[j].append(0)  
+        else:
+          l1dRes[j].append(float(l1d[j][i]) / total_access)
       else:
-        l1dRes[j].append(float(l1d[j][i]) / total_misses)
+        if total_misses == 0:
+          l1dRes[j].append(0)  
+        else:
+          l1dRes[j].append(float(l1d[j][i]) / total_misses)
+
     total_access = 0 
     total_misses = 0
 
+#  print(l1dRes)
   return l1dRes
 
 def l2_metrics(nofl2, kid, start, finish, freq):
@@ -122,7 +132,7 @@ def l2_metrics(nofl2, kid, start, finish, freq):
     windowIntervalFinish = int(finish / 1000000)
 
   path = ""
-  l2 = np.zeros((6, int((finish-start)/freq)), dtype = int)
+  l2 = np.zeros((6, int((finish)/freq)), dtype = int)
   for i in range(windowIntervalStart, windowIntervalFinish + 1):
     for j in range (0, nofl2):
       if i > 0:
@@ -149,7 +159,7 @@ def l2_metrics(nofl2, kid, start, finish, freq):
           secMisses += int(row[5])    # sector misses 
           mshrHits += int(row[6])    # mshr hits
 
-        if "cycle" not in row and cycle % freq == 0:
+        if "cycle" not in row and cycle % freq == 0 and (int(row[0]) < finish) and (int(row[0]) >= start):
           l2[0][int(cycle / freq)] += hits    # hit accesses
           l2[1][int(cycle / freq)] += hitReses    # hit reserved accesses
           l2[2][int(cycle / freq)] += misses    # miss accesses
@@ -176,11 +186,18 @@ def l2_metrics(nofl2, kid, start, finish, freq):
         total_access += l2[j][i]
       if j in [2,4]:
         total_misses += l2[j][i]
+
     for j in range(0, 6):
       if j != 5:
-        l2Res[j].append(float(l2[j][i]) / total_access)
+        if total_access == 0:
+          l2Res[j].append(0)  
+        else:
+          l2Res[j].append(float(l2[j][i]) / total_access)
       else:
-        l2Res[j].append(float(l2[j][i]) / total_misses)
+        if total_misses == 0:
+          l2Res[j].append(0)
+        else:
+          l2Res[j].append(float(l2[j][i]) / total_misses)
     total_access = 0 
     total_misses = 0
 
@@ -211,7 +228,7 @@ def dram_metrics(nofdram, kid, start, finish, freq):
     windowIntervalFinish = int(finish / 1000000)
 
   path = ""
-  dram = np.zeros((2, int((finish-start)/freq)), dtype = int)
+  dram = np.zeros((2, int((finish)/freq)), dtype = int)
   for i in range(windowIntervalStart, windowIntervalFinish + 1):
     for j in range (0, nofdram):
       if i > 0:
@@ -230,7 +247,7 @@ def dram_metrics(nofdram, kid, start, finish, freq):
           hits += int(row[1])    # hit accesses
           misses += int(row[2])    # miss accesses
 
-        if "cycle" not in row and cycle % freq == 0:
+        if "cycle" not in row and cycle % freq == 0 and (int(row[0]) < finish) and (int(row[0]) >= start):
           dram[0][int(cycle / freq)] += hits    # hit accesses
           dram[1][int(cycle / freq)] += misses    # miss accesses
           hits = 0
@@ -246,7 +263,10 @@ def dram_metrics(nofdram, kid, start, finish, freq):
     for j in range(0, 2): # hit, miss.
       total_access += dram[j][i]
     for j in range(0, 2):
-      dramRes[j].append(float(dram[j][i]) / total_access)
+      if total_access == 0:
+        dramRes[j].append(0)
+      else:
+        dramRes[j].append(float(dram[j][i]) / total_access)
     total_access = 0 
   return dramRes
 
@@ -275,7 +295,7 @@ def ipc_col_calc(nofl1d, kid, start, finish, freq):
     windowIntervalFinish = int(finish / 1000000)
 
   path = ""
-  ipc = np.zeros((int((finish-start)/freq)), dtype = float)
+  ipc = np.zeros((int((finish)/freq)), dtype = float)
   for i in range(windowIntervalStart, windowIntervalFinish + 1):
     if i > 0:
       path = dir_path + "_" + str(i+1) + ".csv"
@@ -291,7 +311,7 @@ def ipc_col_calc(nofl1d, kid, start, finish, freq):
 
     for row in reader:
       if "cycle" not in row and (int(row[0]) < finish) and (int(row[0]) >= start):
-        for idx, val in enumerate(row): 
+        for idx, val in enumerate(row):
           if idx == 0:
             ipc_per_interval[idx].append(int(val))
           else:
@@ -307,10 +327,10 @@ def ipc_col_calc(nofl1d, kid, start, finish, freq):
         zeroIPCs.append(j)
 
     nofActiveSMs = nofl1d - len(zeroIPCs)
+
     for j in range(0, len(ipc_per_interval[0])):
       for k in range(1, len(ipc_per_interval)):
-        if k not in zeroIPCs:
-          ipc[int(ipc_per_interval[0][j]/freq)] += ipc_per_interval[k][j]
+        ipc[int(ipc_per_interval[0][j]/freq)] += ipc_per_interval[k][j]
       ipc[int(ipc_per_interval[0][j]/freq)] = \
                     ipc[int(ipc_per_interval[0][j]/freq)] / nofActiveSMs
   return ipc
@@ -341,7 +361,7 @@ def power_col_calc(kid, start, finish, freq):
     windowIntervalFinish = int(finish / 1000000)
 
   pow_metrics = {}
-  pow_metrics["total"] = np.zeros((int((finish-start)/freq)), dtype = float)
+  pow_metrics["total"] = np.zeros((int((finish)/freq)), dtype = float)
   proc_total_path = baseline_path + "/f_processor"
   path = ""
   for i in range(windowIntervalStart, windowIntervalFinish + 1):
@@ -355,20 +375,20 @@ def power_col_calc(kid, start, finish, freq):
     powCounter = 0
     cycle = 0
     for row in reader:
-      if ("Cycle" not in row) and (start <= int(row[0])):
+      if ("Cycle" not in row) and int(row[0]) < finish and (int(row[0]) >= start):
         powCounter += float(row[7])
         cycle = int(row[0])
 
       if cycle >= finish:
         break
 
-      if "Cycle" not in row and cycle % freq == 0:
+      if "Cycle" not in row and cycle % freq == 0 and (int(row[0]) < finish) and (int(row[0]) >= start):
         pow_metrics["total"][int(cycle / freq)] += powCounter    # hit accesses
         powCounter = 0
 
     file.close()
 
-  pow_metrics["cores"] = np.zeros((int((finish-start)/freq)), dtype = float)
+  pow_metrics["cores"] = np.zeros((int((finish)/freq)), dtype = float)
   proc_cores_path = baseline_path + "/f_p_total_cores"
   for i in range(windowIntervalStart, windowIntervalFinish + 1):
     if i > 0:
@@ -381,19 +401,19 @@ def power_col_calc(kid, start, finish, freq):
     powCounter = 0
     cycle = 0
     for row in reader:
-      if ("Cycle" not in row) and (start <= int(row[0])):
+      if ("Cycle" not in row) and (int(row[0]) < finish) and (int(row[0]) >= start):
         powCounter += float(row[5])
         cycle = int(row[0])
 
       if cycle >= finish:
         break
 
-      if "Cycle" not in row and cycle % freq == 0:
+      if "Cycle" not in row and cycle % freq == 0 and (int(row[0]) < finish) and (int(row[0]) >= start):
         pow_metrics["cores"][int(cycle / freq)] += powCounter    # hit accesses
         powCounter = 0
     file.close()
 
-  pow_metrics["l2"] = np.zeros((int((finish-start)/freq)), dtype = float)
+  pow_metrics["l2"] = np.zeros((int((finish)/freq)), dtype = float)
   proc_l2_path = baseline_path + "/f_p_total_l2"
   for i in range(windowIntervalStart, windowIntervalFinish + 1):
     if i > 0:
@@ -406,19 +426,19 @@ def power_col_calc(kid, start, finish, freq):
     powCounter = 0
     cycle = 0
     for row in reader:
-      if ("Cycle" not in row) and (start <= int(row[0])):
+      if ("Cycle" not in row) and (int(row[0]) < finish) and (int(row[0]) >= start) :
         powCounter += float(row[5])
         cycle = int(row[0])
 
       if cycle >= finish:
         break
 
-      if "Cycle" not in row and cycle % freq == 0:
+      if "Cycle" not in row and cycle % freq == 0 and (int(row[0]) < finish) and (int(row[0]) >= start):
         pow_metrics["l2"][int(cycle / freq)] += powCounter    # hit accesses
         powCounter = 0
     file.close()
 
-  pow_metrics["mcs"] = np.zeros((int((finish-start)/freq)), dtype = float)
+  pow_metrics["mcs"] = np.zeros((int((finish)/freq)), dtype = float)
   proc_mcs_path = baseline_path + "/f_p_total_mcs"
   for i in range(windowIntervalStart, windowIntervalFinish + 1):
     if i > 0:
@@ -431,19 +451,19 @@ def power_col_calc(kid, start, finish, freq):
     powCounter = 0
     cycle = 0
     for row in reader:
-      if ("Cycle" not in row) and (start <= int(row[0])):
+      if ("Cycle" not in row) and (int(row[0]) < finish) and (int(row[0]) >= start):
         powCounter += float(row[5])
         cycle = int(row[0])
 
       if cycle >= finish:
         break
 
-      if "Cycle" not in row and cycle % freq == 0:
+      if "Cycle" not in row and cycle % freq == 0 and (int(row[0]) < finish) and (int(row[0]) >= start):
         pow_metrics["mcs"][int(cycle / freq)] += powCounter    # hit accesses
         powCounter = 0
     file.close()
 
-  pow_metrics["nocs"] = np.zeros((int((finish-start)/freq)), dtype = float)
+  pow_metrics["nocs"] = np.zeros((int((finish)/freq)), dtype = float)
   proc_nocs_path = baseline_path + "/f_p_total_nocs"
   for i in range(windowIntervalStart, windowIntervalFinish + 1):
     if i > 0:
@@ -456,14 +476,14 @@ def power_col_calc(kid, start, finish, freq):
     powCounter = 0
     cycle = 0
     for row in reader:
-      if ("Cycle" not in row) and (start <= int(row[0])):
+      if ("Cycle" not in row) and (int(row[0]) < finish) and (int(row[0]) >= start):
         powCounter += float(row[5])
         cycle = int(row[0])
 
       if cycle >= finish:
         break
 
-      if "Cycle" not in row and cycle % freq == 0:
+      if "Cycle" not in row and cycle % freq == 0 and (int(row[0]) < finish) and (int(row[0]) >= start):
         pow_metrics["nocs"][int(cycle / freq)] += powCounter    # hit accesses
         powCounter = 0
     file.close()
@@ -510,7 +530,7 @@ def get_config_information():
 def plot_statistics(l1dR, l2R, dramR, ipcR, power_metricsR, start, finish, freq):
 
   figure, axis = plt.subplots(4, 1)
-  X = np.arange(start = start, stop = finish, step = freq)
+  X = np.arange(start = 0, stop = finish, step = freq)
 
   axis[0].plot(X, l1dR[0], color='g', label='Hit')
   axis[0].plot(X, l1dR[1], color='b', label='Hit Reserved')
@@ -564,7 +584,12 @@ if __name__ == '__main__':
   sim_file = ""
 
   get_config_information()
+  print(arch_name)
   nofL1D, nofL2, nofDRAM, nofSM, _ = collectArchitectureInformation(arch_name)
+  print("Nof L1D: " + str(nofL1D))
+  print("Nof L2: " + str(nofL2))
+  print("Nof DRAM: " + str(nofDRAM))
+  print("Nof SM: " + str(nofSM))
 
   kid = int(sys.argv[1])
   start = int(sys.argv[2])
